@@ -56,16 +56,15 @@ class Daemon:
                 print(p.pid)
 
     def stop(self):
-        with open(".pid", 'w+') as f:
-            try:
+        if os.path.exists(".pid"):
+            with open(".pid") as f:
                 pid = int(f.read())
-            except ValueError:
-                pid = -1
-            finally:
-                if pid_exists(pid):
-                    os.kill(pid, 9)
-                else:
-                    raise ProcessNotStartedException
+                print(pid)
+            if pid_exists(pid):
+                os.kill(pid, 9)
+                print("process stoped")
+                return
+        raise ProcessNotStartedException
 
     def restart(self):
         self.stop()
