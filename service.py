@@ -4,6 +4,7 @@ import sys
 import subprocess
 import errno
 import os
+from net import ask_city
 
 
 class ProcessNotStartedException(Exception): pass
@@ -66,30 +67,29 @@ class Daemon:
                 return
         raise ProcessNotStartedException
 
-    def restart(self):
-        self.stop()
-        self.start()
+    def restart(self, ignore_exception=False):
+        if ignore_exception:
+            try:
+                self.stop()
+            except ProcessNotStartedException:
+                pass
+            finally:
+                self.start()
+        else:
+            self.stop()
+            self.start()
 
 
 proc = Daemon()
 
 if len(sys.argv) > 1:
     arg = sys.argv[1]
-    # if sys.argv[1] == "start":
-    #     start()
-    # elif sys.argv[1] == "restart":
-    #     stop()
-    #     start()
-    # elif sys.argv[1] == "stop":
-    #     stop()
     if arg in ("start", "stop", "restart"):
         getattr(proc, arg)()
+    elif arg == "-s":
+        ask_city()
+        proc.restart(ignore_exception=True)
     else:
         print(f"Unknown param {arg}")
 else:
     print("no param")
-
-# if __name__ == '__main__':
-#     with DaemonContext(working_directory="/media/versa/ProjectData/python/sholat"):
-#         main()
-

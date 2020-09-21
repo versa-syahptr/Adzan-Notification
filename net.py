@@ -17,9 +17,7 @@ settings = config.read(CFG)
 root_dir = os.path.dirname(__file__)
 
 
-
 class NoConnectionError(BaseException): pass
-
 
 
 def get_kota():
@@ -29,10 +27,17 @@ def get_kota():
 
 
 def ask_city():
-    city = get_kota()
-    ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}", buttons=("Benar", "Salah"))
-    if ask == 'Salah':
-        city = prompt(title="Jadwal Sholat", text="Masukan lokasi anda")
+    pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
+    if check_connection():
+        city = get_kota()
+        ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}", buttons=("Benar", "Salah"))
+        if ask == 'Salah':
+            city = pr(city)
+    else:
+        city = pr("")
+        while not city:
+            city = pr("")
+            continue
 
     print(city)
     config["settings"] = dict(kota=city)
@@ -87,8 +92,7 @@ def save_data(data: dict):
 def load_data(file):
     with open(file) as f:
         data = json.load(f)
-    return data["results"]["datetime"][today.day - 1]["times"]
-
+    return {**data["results"]["datetime"][today.day - 1]["times"], **data["results"]["location"]}
 
 
 def today_data() -> dict or None:
@@ -106,7 +110,3 @@ def today_data() -> dict or None:
             print("no internet")
             return
         return load_data(filename)
-
-# kota = "bekasi"
-# save_data(kota)
-print(today_data())

@@ -17,7 +17,7 @@ notify = _nux_notify
 
 if __name__ == '__main__':
     _nux_notify("title", "msg", icon="masjid")
-    #from time import sleep
+    # from time import sleep
     # notif = notify("tes", "msg", icon="masjid")
     # sleep(5)
-    # notif.close()
+    # notif.close()pi

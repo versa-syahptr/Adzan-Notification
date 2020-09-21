@@ -1,47 +1,48 @@
 #!./env/bin/python3.7
 
-# imports
 import platform
 import sched
-from datetime import datetime, date
 import os
 import time
 import sys
-# System spesific imports
-import fetcher
 import net
 
-system = platform.system()
-ISDOS = system == "Windows"
-ISNUX = system == "Linux"
-if ISDOS:
-    from winfunc import notify
-    # ssslolfrom playsound import playsound
-elif ISNUX:
-    from linux import notify
+from datetime import datetime, date
 import simpleaudio as sa
 
+system = platform.system()
+# platform constants
+ISDOS = system == "Windows"
+ISNUX = system == "Linux"
+# platform spesific import
+if ISDOS:
+    from winfunc import notify
+elif ISNUX:
+    from linux import notify
 
+
+# comnstants
 APP_NAME = "Adzan Notification"
 today = date.today()
 s = sched.scheduler(time.time, time.sleep)
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
-lokasi = ""
+notifications = []
 
 
 # FUNCTIONS
 def do_adzan(solat:str, kota:str):
-    audio = f"{solat}.wav" if "subuh" in solat.lower() else "adzan.wav"
+    audio = f"{solat}.wav" if "fajr" in solat.lower() else "adzan.wav"
     audio_file = os.path.join(src_dir, audio)
     now = datetime.now().strftime('%H:%M')
-    notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {kota}.")
+    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {kota}.")
+    notifications.append(n)
     wvObj = sa.WaveObject.from_wave_file(audio_file) 
     adzan = wvObj.play()
     adzan.wait_done()
 
 
-def schedule(jadwal:dict) -> list:
+def schedule(jadwal: dict) -> list:
     event = []
     sholat_list = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
     if not jadwal:
@@ -52,7 +53,7 @@ def schedule(jadwal:dict) -> list:
         if nama.lower() in sholat_list:
             timestamp = time.mktime(time.strptime(f"{today} {waktu}", "%Y-%m-%d %H:%M"))
             if timestamp > time.time():
-                event.append(s.enterabs(timestamp, 1, do_adzan, argument=(nama, jadwal['kota'])))
+                event.append(s.enterabs(timestamp, 1, do_adzan, argument=(nama, jadwal['city'])))
     return event
 
 
@@ -62,15 +63,16 @@ events = []
 def main():
     try:
         global events
-        notify("Notifikasi Adzan started")
-        net.save_data(net.get_data(lokasi))
+        notifications.append(notify("Notifikasi Adzan started"))
         # data = fetcher.init()
-        data = net.today_data(lokasi)
+        data = net.today_data()
         events = schedule(data)
         s.run()
     except KeyboardInterrupt:
         for event in events:
             s.cancel(event)
+        for notif in notifications:
+            notif.close()
     finally:
         if ISNUX:
             os.remove(".pid")

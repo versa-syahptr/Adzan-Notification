@@ -1,13 +1,7 @@
 import ctypes
-# import sys
 import subprocess
 import os
 
-
-# old notification
-def _notify(title, msg=' ', icon="main.ico"):
-    pass
-    # return toaster.show_toast(title, msg, icon)
 
 def notify(title, msg=' '):
     # using 'toast64' from https://github.com/go-toast/toast
