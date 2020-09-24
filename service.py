@@ -77,7 +77,7 @@ class Daemon:
                 self.start()
         else:
             self.stop()
-            self.start()
+            self.start() 
 
 
 proc = Daemon()

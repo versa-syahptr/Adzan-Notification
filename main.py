@@ -35,7 +35,7 @@ def do_adzan(solat:str, kota:str):
     audio = f"{solat}.wav" if "fajr" in solat.lower() else "adzan.wav"
     audio_file = os.path.join(src_dir, audio)
     now = datetime.now().strftime('%H:%M')
-    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {kota}.")
+    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {net.settings.city}.")
     notifications.append(n)
     wvObj = sa.WaveObject.from_wave_file(audio_file) 
     adzan = wvObj.play()
@@ -50,10 +50,11 @@ def schedule(jadwal: dict) -> list:
         sys.exit(1)
     for nama, waktu in jadwal.items():
         print(nama, waktu)
+        waktu = waktu.split()[0]
         if nama.lower() in sholat_list:
             timestamp = time.mktime(time.strptime(f"{today} {waktu}", "%Y-%m-%d %H:%M"))
             if timestamp > time.time():
-                event.append(s.enterabs(timestamp, 1, do_adzan, argument=(nama, jadwal['city'])))
+                event.append(s.enterabs(timestamp, 1, do_adzan, argument=(nama,)))
     return event
 
 
