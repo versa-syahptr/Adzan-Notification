@@ -31,11 +31,12 @@ notifications = []
 
 
 # FUNCTIONS
-def do_adzan(solat:str, kota:str):
+def do_adzan(solat:str):
+    kota = net.settings.city
     audio = f"{solat}.wav" if "fajr" in solat.lower() else "adzan.wav"
     audio_file = os.path.join(src_dir, audio)
     now = datetime.now().strftime('%H:%M')
-    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {net.settings.city}.")
+    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {kota}.")
     notifications.append(n)
     wvObj = sa.WaveObject.from_wave_file(audio_file) 
     adzan = wvObj.play()
