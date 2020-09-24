@@ -32,4 +32,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 Please make sure to update tests as appropriate.
 
 ## License
-[GPLv3](https://choosealicense.com/licenses/mit/)
+[GPLv3](https://github.com/versa-syahptr/Adzan-Notification/blob/master/COPYING)
