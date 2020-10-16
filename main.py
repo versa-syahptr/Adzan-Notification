@@ -1,46 +1,64 @@
 #!./env/bin/python3.7
 
-import platform
-import sched
 import os
-import time
+import sched
 import sys
-import net
-
+import time
 from datetime import datetime, date
+from queue import Queue, Empty
+from threading import Thread
+
 import simpleaudio as sa
 
-system = platform.system()
-# platform constants
-ISDOS = system == "Windows"
-ISNUX = system == "Linux"
-# platform spesific import
-if ISDOS:
-    from winfunc import notify
-elif ISNUX:
-    from linux import notify
+import net
+from gui import notify, Popup
 
-
-# comnstants
+# constants
 APP_NAME = "Adzan Notification"
 today = date.today()
 s = sched.scheduler(time.time, time.sleep)
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
-notifications = []
+# gui = Gui()
+q = Queue(maxsize=1)
+popup = Popup()
 
 
 # FUNCTIONS
-def do_adzan(solat:str):
+def do_adzan(solat: str, test=False):
     kota = net.settings.city
     audio = f"{solat}.wav" if "fajr" in solat.lower() else "adzan.wav"
     audio_file = os.path.join(src_dir, audio)
     now = datetime.now().strftime('%H:%M')
-    n = notify(title=f"Waktu sholat {solat} di {kota}", msg=f"Waktu sholat {solat} pukul {now} di {kota}.")
-    notifications.append(n)
-    wvObj = sa.WaveObject.from_wave_file(audio_file) 
+    msg = f"Waktu sholat {solat} pukul {now} untuk Kota {kota} dan sekitarnya"
+    notify(title=f"Waktu sholat {solat} di {kota}", msg=msg)
+    wvObj = sa.WaveObject.from_wave_file(audio_file)
     adzan = wvObj.play()
-    adzan.wait_done()
+    q.put(msg)  # show the popup
+    if test:
+        time.sleep(20)
+        adzan.stop()
+    else:
+        while adzan.is_playing():
+            try:
+                data = popup.q.get(timeout=0.5)
+            except Empty:
+                continue
+            else:
+                print(data)
+                adzan.stop()
+
+    popup.close()
+
+
+def show_popup(test=False):
+    while True:
+        if s.empty() and not test:
+            break
+        msg = q.get()
+        popup.show(msg)
+        if test:
+            break
 
 
 def schedule(jadwal: dict) -> list:
@@ -59,27 +77,34 @@ def schedule(jadwal: dict) -> list:
     return event
 
 
+def test():
+    Thread(target=do_adzan, args=("", True), daemon=True).start()
+    show_popup(True)
+
+
 events = []
 
 
 def main():
+    t = Thread(target=s.run, daemon=True)
     try:
         global events
-        notifications.append(notify("Notifikasi Adzan started"))
-        # data = fetcher.init()
+        notify("Notifikasi Adzan started")
         data = net.today_data()
         events = schedule(data)
-        s.run()
+        t.start()
+        show_popup()  # func to wait the queue
     except KeyboardInterrupt:
-        for event in events:
-            s.cancel(event)
-        for notif in notifications:
-            notif.close()
+        pass
     finally:
-        if ISNUX:
+        if os.path.exists(".pid"):
             os.remove(".pid")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() == "-t":
+            test()
+    else:
+        main()
 

@@ -1,7 +1,9 @@
+#!./env/bin/python3.7
 import configparser
+import platform
+import subprocess
 
-
-parser = configparser.ConfigParser()
+parser = configparser.ConfigParser(allow_no_value=True)
 
 
 class Settings:
@@ -11,25 +13,27 @@ class Settings:
             self._address = ""
             self._port = 0
 
+    class _Audio:
+        def __init__(self):
+            if "audio" not in parser:
+                parser.add_section("audio")
+            self.subuh = parser["audio"]["subuh"]
+            self.other = parser["audio"]["other"]
+
     def __init__(self, filename):
         self.filename = filename
         self.comunication = self._Coms()
         self._file = parser.read(filename)
         self._data = None
-        if 'PARAMS' not in parser:
-            parser.add_section('PARAMS')
-        self._data = parser['PARAMS']
-
-        # DATA
+        if 'api params' not in parser:
+            parser.add_section('api params')
+        self._data = parser['api params']
         self._city = ""
-        self._country = ''
-        self._method = 0
-        self._methodSettings = ""
-        self._tune = ""
+
 
     @property
     def are_available(self):
-        return bool(self._file)
+        return bool(self._city)
 
     def write(self):
         with open(self.filename, 'w') as f:
@@ -45,11 +49,16 @@ class Settings:
         )
         self.data = default
 
+    def open_file(self):
+        if platform.system() == 'Linux':
+            subprocess.Popen(["xdg-open", self.filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        elif platform.system() == 'Windows':
+            subprocess.Popen(self.filename)
+
     # PROPS
     @property
     def data(self):
-        d = dict(parser['PARAMS'])
-        # print(d)
+        d = dict(parser['api params'])
         return d
 
     @data.setter
@@ -58,20 +67,21 @@ class Settings:
             self._data[key] = value
         self.write()
 
-
     @property
     def city(self):
-        self.data["city"] = self._city
+        self._city = self._data["city"]
         return self._city
 
     @city.setter
     def city(self, val):
-        self.data["city"] = self._city = val.lower()
+        self._data["city"] = self._city = val.lower()
         self.write()
 
 
 if __name__ == '__main__':
-    seting = Settings("settings.cfg")
-    # seting.set_default()
+    # For testing
+    seting = Settings("settings.ini")
+    if not seting.are_available:
+        seting.open_file()
     print(seting.data)
-    print(parser['PARAMS']['city'])
+    print(parser['api params']['city'])

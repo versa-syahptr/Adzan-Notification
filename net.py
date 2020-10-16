@@ -1,11 +1,12 @@
 import json
 import os
+from datetime import date
 
 import requests
-from datetime import date
-from requests import HTTPError
-from setting import Settings
 from pymsgbox import confirm, prompt
+from requests import HTTPError
+
+from setting import Settings
 
 OLD_API_ENDPOINT = "https://api.pray.zone/v2/times/this_month.json"
 API_ENDPOINT = "http://api.aladhan.com/v1/calendarByCity"
@@ -20,10 +21,11 @@ settings = Settings(CFG)
 class NoConnectionError(BaseException): pass
 
 
-def get_kota():
+def get_location():
     req = requests.get("https://freegeoip.app/json")
     print("kota ip")
-    return req.json()["city"]
+    data = req.json()
+    return {"city": data['city'], "country": data["country_code"]}
 
 
 def ask_city():
@@ -33,7 +35,7 @@ def ask_city():
     """
     pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
     if check_connection():
-        city = get_kota()
+        city = get_location()
         ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}",
                       buttons=("Benar", "Salah"))
         if ask == 'Salah':
@@ -44,6 +46,11 @@ def ask_city():
             city = pr("")
             continue
     return city
+
+
+def check_city(**data) -> bool:
+    r = requests.head(API_ENDPOINT, params=data)
+    return r.headers
 
 
 def check_connection() -> bool:
@@ -78,9 +85,10 @@ def get_data() -> dict or bool:
 
 
 def save_data(data: dict):
-    if not os.path.exists("data"):
+    data_dir = os.path.join(root_dir, "data")
+    if not os.path.isdir(data_dir):
         os.mkdir("data")
-    filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")
+    filename = os.path.join(data_dir, f"{settings.city}-{today.month}-{today.year}.json")
     if data:
         with open(filename, 'w') as file:
             file.write(json.dumps(data))
@@ -97,11 +105,10 @@ def load_data(file):
 
 
 def today_data() -> dict or None:
-    print(settings.city)
-    if not settings.are_available:
-        settings.city = ask_city()
-        settings.set_default()
-        print(settings.data)
+    # if not settings.are_available:
+    #     settings.city = ask_city()
+    #     settings.set_default()
+    #     print(settings.data)
     filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")
     if os.path.exists(filename):
         return load_data(filename)
@@ -121,5 +128,7 @@ def print_data():
     for key, value in data.items():
         print(f"{key}:({value})")
 
+
 if __name__ == '__main__':
-    print_data()
+    print(check_city(city="beaksi", country="id"))
+    # print(today_data())

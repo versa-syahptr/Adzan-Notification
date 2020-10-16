@@ -1,10 +1,12 @@
 #!./env/bin/python3.7
 
-import sys
-import subprocess
 import errno
 import os
+import subprocess
+import sys
+
 from net import ask_city
+from setting import Settings
 
 
 class ProcessNotStartedException(Exception): pass
@@ -52,7 +54,11 @@ class Daemon:
             finally:
                 if pid_exists(pid):
                     return
-                p = subprocess.Popen(["./main.py"], start_new_session=True)
+                if os.path.exists("./adzan-service.exe"):
+                    app = "./adzan-service.exe"
+                else:
+                    app = "./main.py"
+                p = subprocess.Popen(app, start_new_session=True)
                 f.write(str(p.pid))
                 print(p.pid)
 
@@ -80,16 +86,17 @@ class Daemon:
             self.start() 
 
 
-proc = Daemon()
-
-if len(sys.argv) > 1:
-    arg = sys.argv[1]
-    if arg in ("start", "stop", "restart"):
-        getattr(proc, arg)()
-    elif arg == "-s":
-        ask_city()
-        proc.restart(ignore_exception=True)
+if __name__ == '__main__':
+    proc = Daemon()
+    settings = Settings("settings.cfg")
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg in ("start", "stop", "restart"):
+            getattr(proc, arg)()
+        elif arg == "-s":
+            settings.city = ask_city()
+            proc.restart(ignore_exception=True)
+        else:
+            print(f"Unknown param {arg}")
     else:
-        print(f"Unknown param {arg}")
-else:
-    print("no param")
+        print("no param")

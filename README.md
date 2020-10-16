@@ -1,6 +1,6 @@
 # Adzan Notification 
 
-Adzan Noification is a background service to send adzan notification with sound based on your location. 
+Adzan Notification is a background service to send adzan notification with sound based on your location. 
 Available for Linux and Windows 10 (not tested for other windows version)
 
 ## Installation
@@ -15,6 +15,14 @@ This software will automatically start after computer reboots.
 
 
 ## Usage
+
+#### Linux
+
+install required dependencies
+```bash
+pip install -r requirements.txt
+```
+
 start, stop, or restart service
 ```bash
 $./adzan-notification/service.py [start|stop|restart]
@@ -30,6 +38,8 @@ run the command above and a pop-up will show to ask your city.
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
+
+
 
 ## License
 [GPLv3](https://github.com/versa-syahptr/Adzan-Notification/blob/master/COPYING)

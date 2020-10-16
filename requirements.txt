@@ -6,6 +6,7 @@ docutils==0.16
 idna==2.10
 lockfile==0.12.2
 notify2==0.3.1
+Pillow==7.2.0
 pyinstaller==4.0
 pyinstaller-hooks-contrib==2020.7
 PyMsgBox==1.0.8
