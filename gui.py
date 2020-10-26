@@ -24,6 +24,7 @@ def _center(win):
     win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
     win.deiconify()
 
+
 def _nux_notify(title, msg='', *, icon='masjid'):
     import notify2
     notify2.init("Adzan")
@@ -32,6 +33,7 @@ def _nux_notify(title, msg='', *, icon='masjid'):
     n.set_hint("suppress-sound", True)
     n.show()
     return n
+
 
 def _win_notify(title, msg=' '):
     # using 'toast64' from https://github.com/go-toast/toast
@@ -46,85 +48,17 @@ def _win_notify(title, msg=' '):
     print(icon)
     return subprocess.call(cmd)
 
-# class Gui:
-#     def __init__(self):
-#         self.root = tk.Tk()
-#         self.WIDTH, self.HEIGTH = 450, 250
-#         # self.root.overrideredirect(1)
-#         self.popup_exist = False
-#         self.root.withdraw()
-#
-#     def show_popup(self, msg, audio_path, test=False):
-#         """
-#         show popup & play adzan sound
-#         :param msg: string -> message on popup
-#         :param audio_path -> str path to audio file
-#         :param test: bool -> for testing
-#         :return: None
-#         """
-#         self.popup_exist = True
-#         IMAGE_PATH = os.path.join("src", "bg")
-#         X_PATH = os.path.join("src", "x")
-#         WIDTH, HEIGTH = 450, 250
-#         popup = tk.Toplevel()
-#         popup.overrideredirect(1)
-#         popup.geometry('{}x{}'.format(WIDTH, HEIGTH))
-#         # Audio
-#         #
-#         # GUI Canvas
-#         canvas = tk.Canvas(popup, width=WIDTH, height=HEIGTH)
-#         canvas.pack()
-#
-#         bg_img = ImageTk.PhotoImage(Image.open(IMAGE_PATH).resize((WIDTH, HEIGTH), Image.ANTIALIAS))
-#         canvas.background = bg_img  # Keep a reference in case this code is put in a function.
-#         canvas.create_image(0, 0, anchor=tk.NW, image=bg_img)  # assign this to variable to get the id
-#         x_img = ImageTk.PhotoImage(Image.open(X_PATH).resize((50, 50), Image.ANTIALIAS))
-#
-#         # assign all of these to variable to get the ids
-#         button_window = canvas.create_image(WIDTH / 2, 3 * HEIGTH / 4, image=x_img)
-#         canvas.create_text(WIDTH / 2, 1 * HEIGTH / 8, font=('lobster', 30), text="Adzan Notification")
-#         canvas.create_text(WIDTH / 2, 2 * HEIGTH / 5, font=('Noto Sans Mono', 14), text=msg, width=400)
-#         # binding mouse click
-#         canvas.tag_bind(button_window, '<Button-1>', lambda x: popup.quit())
-#
-#         def quit_after():
-#             """
-#             quiter func thread
-#             """
-#             print(t.getName())
-#             if test:
-#                 sleep(20)
-#             else:
-#                 # adzan.wait_done()
-#             # if self.popup_exist:
-#             #     self.__quit()
-#                 popup.quit()
-#             return
-#
-#         _center(popup)
-#         # Thread to stop gui
-#         t = Thread(target=quit_after, daemon=True)
-#         t.start()
-#         # popup.after(500, quit_after)
-#         # popup mainloop
-#         popup.mainloop()
-#         # adzan.stop()
-#
-#     def __quit(self, event="no"):
-#         print(event)
-#         self.root.destroy()
-#         self.popup_exist = False
-
 
 class Popup(tk.Toplevel):
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.withdraw()
-        super().__init__(self.root)
+        super().__init__()
+        self.master.withdraw()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250
         self.overrideredirect(1)
+        self.lift()
+        self.attributes('-topmost', True)
         self.geometry('{}x{}'.format(self.WIDTH, self.HEIGTH))
         self.q = Queue(maxsize=1)
 

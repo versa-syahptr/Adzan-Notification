@@ -6,5 +6,6 @@ venv\Scripts\pyinstaller.exe ^
 --icon src\icon.ico ^
 --add-data "src\*;src" ^
 --add-data "toast64.exe;." ^
+--add-data "settings.ini;." ^
 main.py
 

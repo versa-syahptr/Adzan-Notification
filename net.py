@@ -14,7 +14,7 @@ today = date.today()
 root_dir = os.path.dirname(__file__)
 
 # Settings file
-CFG = "settings.cfg"
+CFG = "settings.ini"
 settings = Settings(CFG)
 
 
@@ -25,7 +25,7 @@ def get_location():
     req = requests.get("https://freegeoip.app/json")
     print("kota ip")
     data = req.json()
-    return {"city": data['city'], "country": data["country_code"]}
+    return [data['city'], data["country_code"]]
 
 
 def ask_city():
@@ -35,7 +35,7 @@ def ask_city():
     """
     pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
     if check_connection():
-        city = get_location()
+        city, cid = get_location()
         ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}",
                       buttons=("Benar", "Salah"))
         if ask == 'Salah':
@@ -45,7 +45,7 @@ def ask_city():
         while not city:
             city = pr("")
             continue
-    return city
+    return city, cid
 
 
 def check_city(**data) -> bool:
@@ -105,10 +105,10 @@ def load_data(file):
 
 
 def today_data() -> dict or None:
-    # if not settings.are_available:
-    #     settings.city = ask_city()
-    #     settings.set_default()
-    #     print(settings.data)
+    if not settings.available:
+        settings.city, settings.country = ask_city()
+        #settings.open_file()
+        #settings.wait_for_edit()
     filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")
     if os.path.exists(filename):
         return load_data(filename)

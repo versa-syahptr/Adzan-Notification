@@ -4,9 +4,10 @@ import errno
 import os
 import subprocess
 import sys
+import time
 
-from net import ask_city
-from setting import Settings
+# from net import ask_city
+# from setting import Settings
 
 
 class ProcessNotStartedException(Exception): pass
@@ -58,7 +59,7 @@ class Daemon:
                     app = "./adzan-service.exe"
                 else:
                     app = "./main.py"
-                p = subprocess.Popen(app, start_new_session=True)
+                p = subprocess.Popen([app, '>', 'log.txt'], start_new_session=True)
                 f.write(str(p.pid))
                 print(p.pid)
 
@@ -86,17 +87,30 @@ class Daemon:
             self.start() 
 
 
+def file_check():
+    print("YEAH CHEECKK")
+    old_le = os.path.getmtime("settings.ini")
+    while True:
+        le = os.path.getmtime("settings.ini")
+        # print(le)
+        time.sleep(0.5)
+        if le > old_le:
+            break
+    print("EDITED!")
+
+
 if __name__ == '__main__':
     proc = Daemon()
-    settings = Settings("settings.cfg")
+    # settings = Settings("settings.cfg")
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if arg in ("start", "stop", "restart"):
             getattr(proc, arg)()
-        elif arg == "-s":
-            settings.city = ask_city()
-            proc.restart(ignore_exception=True)
+        # elif arg == "-s":
+        #     settings.city = ask_city()
+        #     proc.restart(ignore_exception=True)
         else:
             print(f"Unknown param {arg}")
     else:
         print("no param")
+        file_check()
