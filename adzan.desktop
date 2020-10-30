@@ -1,0 +1,15 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Jadwal Sholat
+Categories=Utility;
+X-GNOME-FullName[en_US]=Jadwal Sholat
+Comment[en_US]=Start adzan notification service
+Icon=/media/versa/ProjectData/python/sholat/src/icon.png
+NoDisplay=false
+Exec=/media/versa/ProjectData/python/sholat/service.py start
+Path=/media/versa/ProjectData/python/sholat/
+Terminal=false
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+X-GNOME-Autostart-enabled=true
