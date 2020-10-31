@@ -7,7 +7,7 @@ import sys
 
 if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
-
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 class ProcessNotStartedException(Exception): pass
 

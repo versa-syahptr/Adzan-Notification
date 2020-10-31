@@ -104,7 +104,7 @@ if platform.system() == "Windows":
 elif platform.system() == "Linux" and not platform.machine().startswith("arm"):
     notify = _nux_notify
 elif platform.machine().startswith("arm"):
-    notify = lambda title, msg: print(title, msg)  # just print the notification to stdout instead
+    notify = lambda title, msg="": print(title, msg)  # just print the notification to stdout instead
 else:
     raise NotImplementedError
 
