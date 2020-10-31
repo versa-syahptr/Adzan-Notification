@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import date
 
@@ -8,14 +9,24 @@ from requests import HTTPError
 
 from setting import Settings
 
-OLD_API_ENDPOINT = "https://api.pray.zone/v2/times/this_month.json"
+# Log stuff
+logger = logging.getLogger(__name__)
+chndl = logging.StreamHandler()
+fhndl = logging.FileHandler("adzan.log")
+cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
+ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
+chndl.setLevel(logging.INFO)
+fhndl.setLevel(logging.WARNING)
+chndl.setFormatter(cf)
+fhndl.setFormatter(ff)
+
+
 API_ENDPOINT = "http://api.aladhan.com/v1/calendarByCity"
 today = date.today()
 root_dir = os.path.dirname(__file__)
 
 # Settings file
-CFG = "settings.ini"
-settings = Settings(CFG)
+settings = Settings("settings.ini")
 
 
 class NoConnectionError(BaseException): pass
@@ -23,11 +34,12 @@ class NoConnectionError(BaseException): pass
 
 def get_location():
     req = requests.get("https://freegeoip.app/json")
-    print("kota ip")
+    logger.info("kota ip")
     data = req.json()
     return [data['city'], data["country_code"]]
 
 
+# TODO: this function will deprecated soon, i'll try implementing alternative method
 def ask_city():
     """
     show gui popup to ask user city
@@ -62,6 +74,7 @@ def check_connection() -> bool:
         requests.get("https://google.com", timeout=5)
         return True
     except Exception:
+        logger.error("NO INTERNET!!")
         return False
 
 
@@ -73,12 +86,13 @@ def get_data() -> dict or bool:
     """
     if not check_connection():
         return False
-    print(settings.data)
+    logger.info(settings.data)
     r = requests.get(API_ENDPOINT, params=settings.data)
     try:
         r.raise_for_status()
-    except HTTPError as e:
-        print(e)
+    except HTTPError:
+        logger.exception(f"HTTP Error occured!, please fix your api parameter(s) in 'settings.ini' file\n"
+                         f"HTTP: {r.status_code}")
         return
 
     return r.json()
@@ -87,21 +101,24 @@ def get_data() -> dict or bool:
 def save_data(data: dict):
     data_dir = os.path.join(root_dir, "data")
     if not os.path.isdir(data_dir):
+        logger.info("Data directory not exist, creating dir...")
         os.mkdir("data")
     filename = os.path.join(data_dir, f"{settings.city}-{today.month}-{today.year}.json")
     if data:
         with open(filename, 'w') as file:
             file.write(json.dumps(data))
-            print("saved")
+            logger.info(f"Data {filename} saved")
     else:
         raise NoConnectionError
 
 
 def load_data(file):
-    print("file loaded")
+    logger.info("file loaded")
     with open(file) as f:
         data = json.load(f)
-    return {**data["data"][today.day - 1]["timings"]}
+    d = {**data["data"][today.day - 1]["timings"]}
+    logger.info(f"Data: {d}")
+    return d
 
 
 def today_data() -> dict or None:
@@ -111,13 +128,14 @@ def today_data() -> dict or None:
         #settings.wait_for_edit()
     filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")
     if os.path.exists(filename):
+        logger.info(f"File exist, loading file: {filename}")
         return load_data(filename)
     else:
         try:
             data = get_data()
             save_data(data)
         except NoConnectionError:
-            print("no internet")
+            logger.warning("no internet")
             return
         return load_data(filename)
 
