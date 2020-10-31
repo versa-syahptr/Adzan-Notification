@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import subprocess
@@ -5,6 +6,16 @@ import tkinter as tk
 from queue import Queue
 
 from PIL import Image, ImageTk
+
+logger = logging.getLogger(__name__)
+chndl = logging.StreamHandler()
+fhndl = logging.FileHandler("adzan.log")
+cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
+ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
+chndl.setLevel(logging.INFO)
+fhndl.setLevel(logging.WARNING)
+chndl.setFormatter(cf)
+fhndl.setFormatter(ff)
 
 
 def _center(win):
@@ -45,24 +56,25 @@ def _win_notify(title, msg=' '):
             '--message', msg,
             '--icon', str(icon)
         ]
-    print(icon)
+    logger.info(icon)
     return subprocess.call(cmd)
 
 
 class Popup(tk.Toplevel):
     def __init__(self):
-        super().__init__()
-        self.master.withdraw()
+        self.root = tk.Tk()
+        super().__init__(self.root)
+        self.root.quit()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250
         self.overrideredirect(1)
-        self.lift()
-        self.attributes('-topmost', True)
         self.geometry('{}x{}'.format(self.WIDTH, self.HEIGTH))
         self.q = Queue(maxsize=1)
 
     def show(self, msg):
+        self.lift()
+        self.attributes('-topmost', True)
         canvas = tk.Canvas(self, width=self.WIDTH, height=self.HEIGTH)
         canvas.pack()
 
@@ -89,8 +101,10 @@ class Popup(tk.Toplevel):
 
 if platform.system() == "Windows":
     notify = _win_notify
-elif platform.system() == "Linux":
+elif platform.system() == "Linux" and not platform.machine().startswith("arm"):
     notify = _nux_notify
+elif platform.machine().startswith("arm"):
+    notify = lambda title, msg: print(title, msg)  # just print the notification to stdout instead
 else:
     raise NotImplementedError
 

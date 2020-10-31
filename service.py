@@ -1,13 +1,12 @@
-#!./env/bin/python3.7
-
+#!/usr/bin/env python3.7
+# TODO: make ths file as a launcher using any python3.7 interpreter
 import errno
 import os
 import subprocess
 import sys
-import time
 
-# from net import ask_city
-# from setting import Settings
+if "DISPLAY" not in os.environ:
+    os.environ["DISPLAY"] = ':0'
 
 
 class ProcessNotStartedException(Exception): pass
@@ -59,7 +58,7 @@ class Daemon:
                     app = "./adzan-service.exe"
                 else:
                     app = "./main.py"
-                p = subprocess.Popen([app, '>', 'log.txt'], start_new_session=True)
+                p = subprocess.Popen(app, start_new_session=True, env=os.environ)
                 f.write(str(p.pid))
                 print(p.pid)
 
@@ -87,18 +86,6 @@ class Daemon:
             self.start() 
 
 
-def file_check():
-    print("YEAH CHEECKK")
-    old_le = os.path.getmtime("settings.ini")
-    while True:
-        le = os.path.getmtime("settings.ini")
-        # print(le)
-        time.sleep(0.5)
-        if le > old_le:
-            break
-    print("EDITED!")
-
-
 if __name__ == '__main__':
     proc = Daemon()
     # settings = Settings("settings.cfg")
@@ -113,4 +100,3 @@ if __name__ == '__main__':
             print(f"Unknown param {arg}")
     else:
         print("no param")
-        file_check()

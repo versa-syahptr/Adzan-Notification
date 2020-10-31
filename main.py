@@ -1,5 +1,6 @@
 #!./env/bin/python3.7
 
+import logging
 import os
 import platform
 import sched
@@ -19,6 +20,19 @@ from net import settings
 if platform.system() == "Windows":
     import psutil
 
+# Log stuff
+logger = logging.getLogger(__name__)
+chndl = logging.StreamHandler()
+fhndl = logging.FileHandler("adzan.log")
+cf = logging.Formatter("%(name)s | %(levelname)s => %(msg)s")
+ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - LOG:%(levelname)s => %(msg)s")
+chndl.setLevel(logging.INFO)
+fhndl.setLevel(logging.WARNING)
+chndl.setFormatter(cf)
+fhndl.setFormatter(ff)
+logger.addHandler(chndl)
+logger.addHandler(fhndl)
+
 
 # constants
 APP_NAME = "Adzan Notification"
@@ -36,7 +50,7 @@ def ps_start():
         pname = psutil.Process(os.getpid()).name()
         p = subprocess.Popen(["psHandler.exe", pname], start_new_session=True)
         pid = str(p.pid)
-        print("ps started with pid", pid)
+        logger.info(f"ps started with pid: {pid}")
         with open("ps.pid", 'w') as f:
             f.write(pid)
 
@@ -53,9 +67,11 @@ def do_adzan(solat: str, test=False):
     kota = net.settings.city
     audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
     audio_file = os.path.join(src_dir, audio)
+    logger.info(f"Audio file: {audio_file}")
     now = datetime.now().strftime('%H:%M')
     msg = f"Waktu sholat {solat} pukul {now} untuk Kota {kota} dan sekitarnya"
     notify(title=f"Waktu sholat {solat} di {kota}", msg=msg)
+    logger.info(msg)
     wvObj = sa.WaveObject.from_wave_file(audio_file)
     adzan = wvObj.play()
     q.put(msg)  # show the popup
@@ -69,7 +85,7 @@ def do_adzan(solat: str, test=False):
             except Empty:
                 continue
             else:
-                print(data)
+                logger.info(data)
                 adzan.stop()
 
     popup.close()
@@ -125,12 +141,9 @@ def main():
         data = net.today_data()
         events = schedule(data)
         t.start()
-        # if platform.system() == "Windows":
-        #     wish = WinSleepHelper()
-        #     wish.start()
         show_popup()  # func to wait the queue
     except KeyboardInterrupt:
-        pass
+        logger.exception("User interupt")
     finally:
         if os.path.exists(".pid"):
             os.remove(".pid")
@@ -141,7 +154,9 @@ if __name__ == "__main__":
         if sys.argv[1].lower() == "-t":
             test()
     else:
-        ps_start()
-        main()
-        ps_stop()
-
+        try:
+            ps_start()
+            main()
+            ps_stop()
+        except Exception as e:
+            logger.exception(e)
