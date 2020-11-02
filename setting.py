@@ -19,6 +19,7 @@ class Settings:
         self.audio = self.__Audio()
         self._data = parser['api params']
         self._city = ""
+        self._mode = "gui"
 
     def write_last_edit(self):
         ts = os.path.getmtime(self.filename)
@@ -58,6 +59,9 @@ class Settings:
         with open(self.filename, 'w') as f:
             parser.write(f)
 
+    def set_mode(self, mode):
+        self._mode = mode
+
     def set_default(self):
         print("default")
         default = dict(
@@ -70,7 +74,11 @@ class Settings:
 
     def open_file(self):
         if platform.system() == 'Linux':
-            subprocess.call(["xdg-open", self.filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+            cmd = "xdg-open"
+            if self._mode == "cli":
+                cmd = "editor"
+            subprocess.Popen([cmd, self.filename])
+
         elif platform.system() == 'Windows':
             p = os.path.abspath(self.filename)
             print(p)

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3.7
-# TODO: make ths file as a launcher using any python3.7 interpreter
 import errno
 import os
 import subprocess
 import sys
 
+mode = 'gui'
 if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
+    mode = 'cli'
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 class ProcessNotStartedException(Exception): pass
@@ -58,7 +59,7 @@ class Daemon:
                     app = "./adzan-service.exe"
                 else:
                     app = "./main.py"
-                p = subprocess.Popen(app, start_new_session=True, env=os.environ)
+                p = subprocess.Popen([app, '-m', mode], start_new_session=True, env=os.environ)
                 f.write(str(p.pid))
                 print(p.pid)
 

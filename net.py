@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 from datetime import date
 
 import requests
@@ -11,12 +12,12 @@ from setting import Settings
 
 # Log stuff
 logger = logging.getLogger(__name__)
-chndl = logging.StreamHandler()
+chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
 ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
 chndl.setLevel(logging.INFO)
-fhndl.setLevel(logging.WARNING)
+fhndl.setLevel(logging.INFO)
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 
@@ -123,9 +124,10 @@ def load_data(file):
 
 def today_data() -> dict or None:
     if not settings.available:
-        settings.city, settings.country = ask_city()
-        #settings.open_file()
-        #settings.wait_for_edit()
+        logger.info("No city provided in setting")
+        # settings.city, settings.country = ask_city()
+        settings.open_file()
+        settings.wait_for_edit()
     filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")
     if os.path.exists(filename):
         logger.info(f"File exist, loading file: {filename}")

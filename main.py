@@ -21,13 +21,14 @@ if platform.system() == "Windows":
     import psutil
 
 # Log stuff
+# TODO: create custom logging formater
 logger = logging.getLogger(__name__)
-chndl = logging.StreamHandler()
+chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s | %(levelname)s => %(msg)s")
-ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - LOG:%(levelname)s => %(msg)s")
+ff = logging.Formatter("\n%(asctime)s  | %(name)s{PID:%(process)d} - LOG:%(levelname)s => %(msg)s")
 chndl.setLevel(logging.INFO)
-fhndl.setLevel(logging.WARNING)
+fhndl.setLevel(logging.INFO)
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 logger.addHandler(chndl)
@@ -64,7 +65,7 @@ def ps_stop():
 
 
 def do_adzan(solat: str, test=False):
-    kota = net.settings.city
+    kota = settings.city
     audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
     audio_file = os.path.join(src_dir, audio)
     logger.info(f"Audio file: {audio_file}")
@@ -101,7 +102,7 @@ def show_popup(test=False):
             break
 
 
-def schedule(jadwal: dict) -> list:
+def schedule(jadwal: dict):
     event = []
     sholat_list = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
     if not jadwal:
@@ -113,8 +114,9 @@ def schedule(jadwal: dict) -> list:
         if nama.lower() in sholat_list:
             timestamp = time.mktime(time.strptime(f"{today} {waktu}", "%Y-%m-%d %H:%M"))
             if timestamp > time.time():
-                event.append(s.enterabs(timestamp, 1, do_adzan, argument=(nama,)))
-    return event
+                s.enterabs(timestamp, 1, do_adzan, argument=(nama,))
+                event.append(nama)
+    logger.info(f"scheduled for adzan: {event}")
 
 
 def test():
@@ -136,27 +138,39 @@ def sleep():
 def main():
     t = Thread(target=s.run, daemon=True)
     try:
-        global events
         notify("Notifikasi Adzan started")
         data = net.today_data()
-        events = schedule(data)
+        schedule(data)
         t.start()
         show_popup()  # func to wait the queue
     except KeyboardInterrupt:
         logger.exception("User interupt")
+        raise
     finally:
         if os.path.exists(".pid"):
             os.remove(".pid")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        if sys.argv[1].lower() == "-t":
-            test()
-    else:
-        try:
-            ps_start()
-            main()
-            ps_stop()
-        except Exception as e:
-            logger.exception(e)
+    try:
+        if len(sys.argv) > 1:
+            if sys.argv[1] == "-t":
+                test()
+                sys.exit(0)
+            elif sys.argv[1] == "-m":
+                if len(sys.argv) > 2:
+                    mode = sys.argv[2]
+                    if mode not in ('gui', 'cli'):
+                        logger.error(f"Invald mode: {mode}")
+                        sys.exit(-1)
+                    settings.set_mode(mode)
+
+                else:
+                    logger.error("No mode specified")
+                    sys.exit(-1)
+
+        ps_start()
+        main()
+        ps_stop()
+    except Exception as e:
+        logger.exception(e)

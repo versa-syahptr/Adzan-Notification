@@ -93,6 +93,7 @@ class Popup(tk.Toplevel):
         self.mainloop()
 
     def close(self, event=""):
+        self.attributes('-topmost', False)
         if event:
             self.q.put(False)
         self.destroy()
