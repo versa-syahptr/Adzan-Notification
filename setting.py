@@ -32,7 +32,7 @@ class Settings:
         old_le = os.path.getmtime(self.filename)
         while True:
             le = os.path.getmtime(self.filename)
-            time.sleep(0.5)
+            time.sleep(1)
             if le > old_le:
                 print("edited")
                 if self.available:
@@ -77,7 +77,7 @@ class Settings:
             cmd = "xdg-open"
             if self._mode == "cli":
                 cmd = "editor"
-            subprocess.call([cmd, self.filename])
+            subprocess.Popen([cmd, self.filename])
 
         elif platform.system() == 'Windows':
             p = os.path.abspath(self.filename)

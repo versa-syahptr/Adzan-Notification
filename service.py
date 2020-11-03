@@ -8,7 +8,8 @@ mode = 'gui'
 if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
     mode = 'cli'
-os.chdir(os.path.abspath(os.path.dirname(__file__)))
+cwd = os.path.abspath(os.path.dirname(__file__))
+
 
 class ProcessNotStartedException(Exception): pass
 
@@ -47,21 +48,23 @@ class Daemon:
         pass
 
     def start(self):
-        with open(".pid", 'w+') as f:
+        with open(".pid", 'r') as f:
             try:
                 pid = int(f.read())
             except ValueError:
                 pid = -1
-            finally:
-                if pid_exists(pid):
-                    return
-                if os.path.exists("./adzan-service.exe"):
-                    app = "./adzan-service.exe"
-                else:
-                    app = "./main.py"
-                p = subprocess.Popen([app, '-m', mode], start_new_session=True, env=os.environ)
-                f.write(str(p.pid))
-                print(p.pid)
+
+        if pid_exists(pid):
+            return
+        if os.path.exists("./adzan-service.exe"):
+            app = "./adzan-service.exe"
+        else:
+            app = "./main.py"
+        p = subprocess.Popen([app, '-m', 'cli'], start_new_session=True, env=os.environ, cwd=cwd)
+        # with open(".pid", 'w') as f:
+        #     f.write(str(p.pid))
+        print(p.pid)
+        sys.exit(0)
 
     def stop(self):
         if os.path.exists(".pid"):

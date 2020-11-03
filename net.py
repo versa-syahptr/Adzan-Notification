@@ -5,7 +5,6 @@ import sys
 from datetime import date
 
 import requests
-from pymsgbox import confirm, prompt
 from requests import HTTPError
 
 from setting import Settings
@@ -16,10 +15,9 @@ chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
 ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
-chndl.setLevel(logging.INFO)
-fhndl.setLevel(logging.INFO)
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
+logger.setLevel(logging.INFO)
 
 
 API_ENDPOINT = "http://api.aladhan.com/v1/calendarByCity"
@@ -40,25 +38,24 @@ def get_location():
     return [data['city'], data["country_code"]]
 
 
-# TODO: this function will deprecated soon, i'll try implementing alternative method
-def ask_city():
-    """
-    show gui popup to ask user city
-    :return: str citi name
-    """
-    pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
-    if check_connection():
-        city, cid = get_location()
-        ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}",
-                      buttons=("Benar", "Salah"))
-        if ask == 'Salah':
-            city = pr(city)
-    else:
-        city = pr("")
-        while not city:
-            city = pr("")
-            continue
-    return city, cid
+# def ask_city():
+#     """
+#     show gui popup to ask user city
+#     :return: str citi name
+#     """
+#     pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
+#     if check_connection():
+#         city, cid = get_location()
+#         ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}",
+#                       buttons=("Benar", "Salah"))
+#         if ask == 'Salah':
+#             city = pr(city)
+#     else:
+#         city = pr("")
+#         while not city:
+#             city = pr("")
+#             continue
+#     return city, cid
 
 
 def check_city(**data) -> bool:
@@ -118,14 +115,12 @@ def load_data(file):
     with open(file) as f:
         data = json.load(f)
     d = {**data["data"][today.day - 1]["timings"]}
-    logger.info(f"Data: {d}")
     return d
 
 
 def today_data() -> dict or None:
     if not settings.available:
         logger.info("No city provided in setting")
-        # settings.city, settings.country = ask_city()
         settings.open_file()
         settings.wait_for_edit()
     filename = os.path.join(root_dir, "data", f"{settings.city}-{today.month}-{today.year}.json")

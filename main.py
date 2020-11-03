@@ -26,13 +26,12 @@ logger = logging.getLogger(__name__)
 chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s | %(levelname)s => %(msg)s")
-ff = logging.Formatter("\n%(asctime)s  | %(name)s{PID:%(process)d} - LOG:%(levelname)s => %(msg)s")
-chndl.setLevel(logging.INFO)
-fhndl.setLevel(logging.INFO)
+ff = logging.Formatter("\n%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 logger.addHandler(chndl)
 logger.addHandler(fhndl)
+logger.setLevel(logging.INFO)
 
 
 # constants
@@ -122,17 +121,6 @@ def schedule(jadwal: dict):
 def test():
     Thread(target=do_adzan, args=("", True), daemon=True).start()
     show_popup(True)
-
-
-def sleep():
-    if getattr(sys, "frozen", False):
-        print("run.exe")
-        subprocess.Popen("run.exe")
-    else:
-        subprocess.Popen("winHelper.py", shell=True)
-        print("py")
-    print("slept")
-    sys.exit(0)
 
 
 def main():
