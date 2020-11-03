@@ -77,7 +77,7 @@ class Settings:
             cmd = "xdg-open"
             if self._mode == "cli":
                 cmd = "editor"
-            subprocess.Popen([cmd, self.filename])
+            subprocess.call([cmd, self.filename])
 
         elif platform.system() == 'Windows':
             p = os.path.abspath(self.filename)
