@@ -70,7 +70,7 @@ def pause_media(app: str) -> iter or None:
         return
     pids = map(int, subprocess.check_output(['pidof', app]).split())
     for pid in pids:
-        os.kill(signal.SIGSTOP, pid)
+        os.kill(pid, signal.SIGSTOP)
     return pids
 
 
@@ -79,7 +79,7 @@ def resume_media(pids: iter):
         return
     time.sleep(1)  # add a sec delay
     for pid in pids:
-        os.kill(signal.SIGCONT, pid)
+        os.kill(pid, signal.SIGCONT)
 
 
 def do_adzan(solat: str, test=False):
