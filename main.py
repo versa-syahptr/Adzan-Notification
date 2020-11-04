@@ -4,6 +4,7 @@ import logging
 import os
 import platform
 import sched
+import signal
 import subprocess
 import sys
 import time
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s | %(levelname)s => %(msg)s")
-ff = logging.Formatter("\n%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
+ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 logger.addHandler(chndl)
@@ -42,6 +43,7 @@ root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
 q = Queue(maxsize=1)
 popup = Popup()
+media_pids = []
 
 
 # FUNCTIONS
@@ -63,7 +65,25 @@ def ps_stop():
         os.remove("ps.pid")
 
 
+def pause_media(app: str) -> iter or None:
+    if not app:
+        return
+    pids = map(int, subprocess.check_output(['pidof', app]).split())
+    for pid in pids:
+        os.kill(signal.SIGSTOP, pid)
+    return pids
+
+
+def resume_media(pids: iter):
+    if not pids:
+        return
+    time.sleep(1)  # add a sec delay
+    for pid in pids:
+        os.kill(signal.SIGCONT, pid)
+
+
 def do_adzan(solat: str, test=False):
+    pids = pause_media(settings.media_player)
     kota = settings.city
     audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
     audio_file = os.path.join(src_dir, audio)
@@ -89,6 +109,7 @@ def do_adzan(solat: str, test=False):
                 adzan.stop()
 
     popup.close()
+    resume_media(pids)
 
 
 def show_popup(test=False):
@@ -125,18 +146,11 @@ def test():
 
 def main():
     t = Thread(target=s.run, daemon=True)
-    try:
-        notify("Notifikasi Adzan started")
-        data = net.today_data()
-        schedule(data)
-        t.start()
-        show_popup()  # func to wait the queue
-    except KeyboardInterrupt:
-        logger.exception("User interupt")
-        raise
-    finally:
-        if os.path.exists(".pid"):
-            os.remove(".pid")
+    notify("Notifikasi Adzan started")
+    data = net.today_data()
+    schedule(data)
+    t.start()
+    show_popup()  # func to wait the queue
 
 
 if __name__ == "__main__":
@@ -160,5 +174,8 @@ if __name__ == "__main__":
         ps_start()
         main()
         ps_stop()
+    except (KeyboardInterrupt, SystemExit) as e:
+        logger.error(f"User interupt or sys exit{{e}}")
+        raise
     except Exception as e:
-        logger.exception(e)
+        logger.exception('\n'+str(e))

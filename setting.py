@@ -118,6 +118,10 @@ class Settings:
         self._data["city"] = self._city = val.lower()
         self.write()
 
+    @property
+    def media_player(self):
+        return parser.get("misc", "media_player")
+
     # SUBCLASS
     class _Coms:
         def __init__(self):

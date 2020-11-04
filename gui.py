@@ -12,10 +12,9 @@ chndl = logging.StreamHandler()
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
 ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
-chndl.setLevel(logging.INFO)
-fhndl.setLevel(logging.WARNING)
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
+logger.setLevel(logging.INFO)
 
 
 def _center(win):
@@ -95,7 +94,7 @@ class Popup(tk.Toplevel):
     def close(self, event=""):
         self.attributes('-topmost', False)
         if event:
-            self.q.put(False)
+             self.q.put(False)
         self.destroy()
         self.quit()
 
