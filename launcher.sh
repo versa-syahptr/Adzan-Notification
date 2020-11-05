@@ -11,7 +11,7 @@ start(){
         ARG="gui"
     fi
 
-    ./main.py -m ${ARG} & disown
+    ./main.py -m cli
     echo $!
     echo $!> .pid
 }
@@ -25,6 +25,7 @@ stop() {
 
 usage() {
     printf "\
+launcher.sh deprecated, please use launcher.py
 Usage:\n
 ${0} --start
 ${0} --stop

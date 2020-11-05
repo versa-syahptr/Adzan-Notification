@@ -15,18 +15,9 @@ class Settings:
         self._data = None
         if 'api params' not in parser:
             parser.add_section('api params')
-        self.comunication = self._Coms()
         self.audio = self.__Audio()
         self._data = parser['api params']
         self._city = ""
-        self._mode = "gui"
-
-    def write_last_edit(self):
-        ts = os.path.getmtime(self.filename)
-        if "misc" not in parser:
-            parser.add_section("misc")
-        parser["misc"]["lastEdit"] = ts
-        self.write()
 
     def wait_for_edit(self):
         old_le = os.path.getmtime(self.filename)
@@ -42,10 +33,6 @@ class Settings:
         self.load()
 
     @property
-    def modified_time(self):
-        return parser.getfloat("misc", "lastEdit")
-
-    @property
     def available(self):
         self.load()
         return bool(self.city and self.country)
@@ -59,9 +46,6 @@ class Settings:
         with open(self.filename, 'w') as f:
             parser.write(f)
 
-    def set_mode(self, mode):
-        self._mode = mode
-
     def set_default(self):
         print("default")
         default = dict(
@@ -74,10 +58,7 @@ class Settings:
 
     def open_file(self):
         if platform.system() == 'Linux':
-            cmd = "xdg-open"
-            if self._mode == "cli":
-                cmd = "editor"
-            subprocess.Popen([cmd, self.filename])
+            subprocess.Popen(["xdg-open", self.filename])
 
         elif platform.system() == 'Windows':
             p = os.path.abspath(self.filename)
@@ -123,12 +104,6 @@ class Settings:
         return parser.get("misc", "media_player")
 
     # SUBCLASS
-    class _Coms:
-        def __init__(self):
-            self._enabled = False
-            self._address = ""
-            self._port = 0
-
     class __Audio:
         def __init__(self):
             if "audio" not in parser:

@@ -4,12 +4,18 @@ import os
 import subprocess
 import sys
 
-mode = 'gui'
+cli = False
 if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
-    mode = 'cli'
+    cli = True
 cwd = os.path.abspath(os.path.dirname(__file__))
-
+this = sys.argv[0]
+usage = f"""
+Usage:
+{this} --start => start new Adzan-Notification process; throws error when the process has started
+{this} --stop => stop current Adzan-Notification process; throws error if the process don't exist
+{this} --restart => restart Adzan-Notification process
+"""
 
 class ProcessNotStartedException(Exception): pass
 
@@ -48,21 +54,28 @@ class Daemon:
         pass
 
     def start(self):
-        with open(".pid", 'r') as f:
-            try:
-                pid = int(f.read())
-            except ValueError:
-                pid = -1
+        if os.path.exists(".pid"):
+            with open(".pid", 'r') as f:
+                try:
+                    pid = int(f.read())
+                except ValueError:
+                    pid = -1
 
-        if pid_exists(pid):
-            return
+            if pid_exists(pid):
+                sys.exit(f"Process already started with pid: {pid}")
+
+        if cli:
+            print("first run, please edit configuration file")
+            subprocess.run(["nano", "settings.ini"])
+
         if os.path.exists("./adzan-service.exe"):
             app = "./adzan-service.exe"
         else:
             app = "./main.py"
-        p = subprocess.Popen([app, '-m', 'cli'], start_new_session=True, env=os.environ, cwd=cwd)
-        # with open(".pid", 'w') as f:
-        #     f.write(str(p.pid))
+
+        p = subprocess.Popen(app, start_new_session=True, env=os.environ, cwd=cwd)
+        with open(".pid", 'w') as f:
+            f.write(str(p.pid))
         print(p.pid)
         sys.exit(0)
 
@@ -77,30 +90,18 @@ class Daemon:
                 return
         raise ProcessNotStartedException
 
-    def restart(self, ignore_exception=False):
-        if ignore_exception:
-            try:
-                self.stop()
-            except ProcessNotStartedException:
-                pass
-            finally:
-                self.start()
-        else:
-            self.stop()
-            self.start() 
+    def restart(self):
+        self.stop()
+        self.start()
 
 
 if __name__ == '__main__':
     proc = Daemon()
-    # settings = Settings("settings.cfg")
     if len(sys.argv) > 1:
         arg = sys.argv[1]
-        if arg in ("start", "stop", "restart"):
-            getattr(proc, arg)()
-        # elif arg == "-s":
-        #     settings.city = ask_city()
-        #     proc.restart(ignore_exception=True)
+        if arg in ("--start", "--stop", "--restart"):
+            getattr(proc, arg.lstrip('--'))()
         else:
-            print(f"Unknown param {arg}")
+            print(f"Unknown param {arg}{usage}")
     else:
-        print("no param")
+        print(f"no param{usage}")

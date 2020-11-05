@@ -68,7 +68,10 @@ def ps_stop():
 def pause_media(app: str) -> iter or None:
     if not app:
         return
-    pids = map(int, subprocess.check_output(['pidof', app]).split())
+    try:
+        pids = map(int, subprocess.check_output(['pidof', app]).split())
+    except subprocess.CalledProcessError:
+        return None
     for pid in pids:
         os.kill(pid, signal.SIGSTOP)
     return pids
@@ -77,39 +80,42 @@ def pause_media(app: str) -> iter or None:
 def resume_media(pids: iter):
     if not pids:
         return
-    time.sleep(1)  # add a sec delay
     for pid in pids:
         os.kill(pid, signal.SIGCONT)
 
 
 def do_adzan(solat: str, test=False):
-    pids = pause_media(settings.media_player)
-    kota = settings.city
-    audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
-    audio_file = os.path.join(src_dir, audio)
-    logger.info(f"Audio file: {audio_file}")
-    now = datetime.now().strftime('%H:%M')
-    msg = f"Waktu sholat {solat} pukul {now} untuk Kota {kota} dan sekitarnya"
-    notify(title=f"Waktu sholat {solat} di {kota}", msg=msg)
-    logger.info(msg)
-    wvObj = sa.WaveObject.from_wave_file(audio_file)
-    adzan = wvObj.play()
-    q.put(msg)  # show the popup
-    if test:
-        time.sleep(20)
-        adzan.stop()
-    else:
-        while adzan.is_playing():
-            try:
-                data = popup.q.get(timeout=0.5)
-            except Empty:
-                continue
-            else:
-                logger.info(data)
-                adzan.stop()
+    try:
+        pids = pause_media(settings.media_player)
+        kota = settings.city
+        audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
+        audio_file = os.path.join(src_dir, audio)
+        logger.info(f"Audio file: {audio_file}")
+        now = datetime.now().strftime('%H:%M')
+        msg = f"Waktu sholat {solat} pukul {now} untuk Kota {kota} dan sekitarnya"
+        notify(title=f"Waktu sholat {solat} di {kota}", msg=msg)
+        logger.info(msg)
+        wvObj = sa.WaveObject.from_wave_file(audio_file)
+        adzan = wvObj.play()
+        q.put(msg)  # show the popup
+        if test:
+            time.sleep(20)
+            adzan.stop()
+        else:
+            while adzan.is_playing():
+                try:
+                    data = popup.q.get(timeout=0.5)
+                except Empty:
+                    continue
+                else:
+                    logger.info(data)
+                    adzan.stop()
 
-    popup.close()
-    resume_media(pids)
+        popup.close()
+        resume_media(pids)
+    except Exception as ex:
+        logger.exception(f"Exception occured in adzan calls!, {ex}, %(threadName)s")
+        raise
 
 
 def show_popup(test=False):
@@ -159,23 +165,12 @@ if __name__ == "__main__":
             if sys.argv[1] == "-t":
                 test()
                 sys.exit(0)
-            elif sys.argv[1] == "-m":
-                if len(sys.argv) > 2:
-                    mode = sys.argv[2]
-                    if mode not in ('gui', 'cli'):
-                        logger.error(f"Invald mode: {mode}")
-                        sys.exit(-1)
-                    settings.set_mode(mode)
-
-                else:
-                    logger.error("No mode specified")
-                    sys.exit(-1)
 
         ps_start()
         main()
         ps_stop()
     except (KeyboardInterrupt, SystemExit) as e:
-        logger.error(f"User interupt or sys exit{{e}}")
+        logger.error(f"User interupt or sys exit: {e}")
         raise
     except Exception as e:
-        logger.exception('\n'+str(e))
+        logger.exception(str(e)+'\n')

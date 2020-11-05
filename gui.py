@@ -8,12 +8,10 @@ from queue import Queue
 from PIL import Image, ImageTk
 
 logger = logging.getLogger(__name__)
-chndl = logging.StreamHandler()
 fhndl = logging.FileHandler("adzan.log")
-cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
 ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
-chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
+logger.addHandler(fhndl)
 logger.setLevel(logging.INFO)
 
 
