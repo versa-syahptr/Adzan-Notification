@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
 cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
-ff = logging.Formatter("%(acstime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
+ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 logger.setLevel(logging.INFO)
@@ -36,26 +36,6 @@ def get_location():
     logger.info("kota ip")
     data = req.json()
     return [data['city'], data["country_code"]]
-
-
-# def ask_city():
-#     """
-#     show gui popup to ask user city
-#     :return: str citi name
-#     """
-#     pr = lambda x: prompt(title="Jadwal Sholat", text="Masukan lokasi anda", default=x)
-#     if check_connection():
-#         city, cid = get_location()
-#         ask = confirm(title="Jadwal Sholat", text=f"Lokasi anda yang terdeteksi adalah\n Kota {city}",
-#                       buttons=("Benar", "Salah"))
-#         if ask == 'Salah':
-#             city = pr(city)
-#     else:
-#         city = pr("")
-#         while not city:
-#             city = pr("")
-#             continue
-#     return city, cid
 
 
 def check_city(**data) -> bool:

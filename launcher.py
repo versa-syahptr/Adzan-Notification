@@ -4,6 +4,8 @@ import os
 import subprocess
 import sys
 
+from setting import Settings
+
 cli = False
 if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
@@ -12,10 +14,13 @@ cwd = os.path.abspath(os.path.dirname(__file__))
 this = sys.argv[0]
 usage = f"""
 Usage:
+
 {this} --start => start new Adzan-Notification process; throws error when the process has started
 {this} --stop => stop current Adzan-Notification process; throws error if the process don't exist
 {this} --restart => restart Adzan-Notification process
 """
+setting = Settings("settings.ini")
+
 
 class ProcessNotStartedException(Exception): pass
 
@@ -64,7 +69,7 @@ class Daemon:
             if pid_exists(pid):
                 sys.exit(f"Process already started with pid: {pid}")
 
-        if cli:
+        if cli and not setting.available:
             print("first run, please edit configuration file")
             subprocess.run(["nano", "settings.ini"])
 
