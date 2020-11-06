@@ -34,6 +34,9 @@ def _center(win):
 
 
 def _nux_notify(title, msg='', *, icon='masjid'):
+    if platform.machine().startswith("arm"):
+        logger.warning("Notification not supported in Raspberry Pi or other arm-based machines")
+        return
     import notify2
     notify2.init("Adzan")
     n = notify2.Notification(title, msg, icon=icon)
@@ -53,7 +56,7 @@ def _win_notify(title, msg=' '):
             '--message', msg,
             '--icon', str(icon)
         ]
-    logger.info(icon)
+    logger.info("Command: "+" ".join(cmd))
     return subprocess.call(cmd)
 
 
@@ -61,7 +64,7 @@ class Popup(tk.Toplevel):
     def __init__(self):
         self.root = tk.Tk()
         super().__init__(self.root)
-        self.root.quit()
+        self.root.withdraw()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250
@@ -88,21 +91,20 @@ class Popup(tk.Toplevel):
         canvas.tag_bind(button_window, '<Button-1>', self.close)
         _center(self)
         self.mainloop()
+        self.root.withdraw()
 
     def close(self, event=""):
         self.attributes('-topmost', False)
         if event:
-             self.q.put(False)
+            self.q.put(False)
         self.destroy()
         self.quit()
 
 
 if platform.system() == "Windows":
     notify = _win_notify
-elif platform.system() == "Linux" and not platform.machine().startswith("arm"):
+elif platform.system() == "Linux":
     notify = _nux_notify
-elif platform.machine().startswith("arm"):
-    notify = lambda title, msg="": print(title, msg)  # just print the notification to stdout instead
 else:
     raise NotImplementedError
 
