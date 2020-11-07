@@ -3,8 +3,11 @@ import errno
 import os
 import subprocess
 import sys
+from time import sleep
 
 from setting import Settings
+
+# launcher.py is UNIX ONLY #
 
 cli = False
 if "DISPLAY" not in os.environ:
@@ -13,19 +16,18 @@ if "DISPLAY" not in os.environ:
 cwd = os.path.abspath(os.path.dirname(__file__))
 this = sys.argv[0]
 usage = f"""
-Usage:
+Usage: {this} [start|stop|restart|status]
 
-{this} --start => start new Adzan-Notification process; throws error when the process has started
-{this} --stop => stop current Adzan-Notification process; throws error if the process don't exist
-{this} --restart => restart Adzan-Notification process
+{this} start => start new Adzan-Notification process; throws error when the process has started
+{this} stop => stop current Adzan-Notification process; throws error if the process don't exist
+{this} restart => restart Adzan-Notification process
+
+{this} status => view process status (aka "ps -F")
 """
 setting = Settings("settings.ini")
 
 
-class ProcessNotStartedException(Exception): pass
-
-
-def pid_exists(pid):
+def pid_exists(pid: int):
     """Check whether pid exists in the current process table.
     UNIX only.
     """
@@ -58,16 +60,23 @@ class Daemon:
     def __init__(self):
         pass
 
-    def start(self):
+    def _get_pid(self):
         if os.path.exists(".pid"):
             with open(".pid", 'r') as f:
                 try:
                     pid = int(f.read())
                 except ValueError:
                     pid = -1
+        else:
+            pid = 0
 
-            if pid_exists(pid):
-                sys.exit(f"Process already started with pid: {pid}")
+        return pid
+
+    def start(self):
+
+        pid = self._get_pid()
+        if pid_exists(pid):
+            sys.exit(f"Process already started with pid: {pid}")
 
         if cli and not setting.available:
             print("first run, please edit configuration file")
@@ -81,31 +90,45 @@ class Daemon:
         p = subprocess.Popen(app, start_new_session=True, env=os.environ, cwd=cwd)
         with open(".pid", 'w') as f:
             f.write(str(p.pid))
-        print(p.pid)
+        print(f"Proess started with pid: {p.pid}")
         sys.exit(0)
 
     def stop(self):
-        if os.path.exists(".pid"):
-            with open(".pid") as f:
-                pid = int(f.read())
-                print(pid)
-            if pid_exists(pid):
-                os.kill(pid, 9)
-                print("process stoped")
-                return
-        raise ProcessNotStartedException
+        pid = self._get_pid()
+        if pid_exists(pid):
+            os.kill(pid, 9)
+            print("process stoped")
+            return
+        else:
+            print(f"No Adzan-Notification process exists")
+            sys.exit(-1)
 
     def restart(self):
         self.stop()
+        sleep(1)
         self.start()
+
+    def status(self):
+        pid = self._get_pid()
+        if pid_exists(pid):
+            try:
+                out = subprocess.check_output(["ps", "-F", str(pid)]).decode().rstrip()
+            except subprocess.CalledProcessError:
+                out = "Somethings wrong, i can feel it!"
+
+            print(out)
+        else:
+            print(f"No Adzan-Notification process exists")
+            sys.exit(-1)
 
 
 if __name__ == '__main__':
     proc = Daemon()
+    os.chdir(cwd)
     if len(sys.argv) > 1:
         arg = sys.argv[1]
-        if arg in ("--start", "--stop", "--restart"):
-            getattr(proc, arg.lstrip('--'))()
+        if arg in ("start", "stop", "restart", "status"):
+            getattr(proc, arg)()
         else:
             print(f"Unknown param {arg}{usage}")
     else:

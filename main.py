@@ -114,7 +114,7 @@ def do_adzan(solat: str, test=False):
         popup.close()
         resume_media(pids)
     except Exception as ex:
-        logger.exception(f"Exception occured in adzan calls!, {ex}, %(threadName)s")
+        logger.exception(f"Exception occured in adzan calls!, {ex}")
         raise
 
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         ps_start()
         main()
         ps_stop()
-    except (KeyboardInterrupt, SystemExit) as e:
+    except KeyboardInterrupt as e:
         logger.error(f"User interupt or sys exit: {e}")
         raise
     except Exception as e:

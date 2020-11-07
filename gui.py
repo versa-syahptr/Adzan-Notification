@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 
 logger = logging.getLogger(__name__)
 fhndl = logging.FileHandler("adzan.log")
-ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
+ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
 fhndl.setFormatter(ff)
 logger.addHandler(fhndl)
 logger.setLevel(logging.INFO)
@@ -64,7 +64,7 @@ class Popup(tk.Toplevel):
     def __init__(self):
         self.root = tk.Tk()
         super().__init__(self.root)
-        self.root.withdraw()
+        self.root.quit()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250

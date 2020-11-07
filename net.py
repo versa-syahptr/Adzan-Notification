@@ -13,8 +13,8 @@ from setting import Settings
 logger = logging.getLogger(__name__)
 chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
-cf = logging.Formatter("%(name)s - %(level)s => %(msg)s")
-ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(level)s => %(msg)s")
+cf = logging.Formatter("%(name)s - %(levelname)s => %(msg)s")
+ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
 logger.setLevel(logging.INFO)
@@ -39,8 +39,8 @@ def get_location():
 
 
 def check_city(**data) -> bool:
-    r = requests.head(API_ENDPOINT, params=data)
-    return r.headers
+    r = requests.get(API_ENDPOINT, params=data)
+    return r.status_code == 200
 
 
 def check_connection() -> bool:
@@ -125,5 +125,5 @@ def print_data():
 
 
 if __name__ == '__main__':
-    print(check_city(city="beaksi", country="id"))
+    print(check_city(city="bkoasi", country="id"))
     # print(today_data())
