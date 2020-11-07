@@ -59,7 +59,6 @@ def check_connection() -> bool:
 def get_data() -> dict or bool:
     """
 
-    :param kota: Nama kota
     :return: Dictionary data if data for specified city is available, otherwise return False
     """
     if not check_connection():

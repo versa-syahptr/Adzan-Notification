@@ -14,6 +14,7 @@ if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
     cli = True
 cwd = os.path.abspath(os.path.dirname(__file__))
+os.chdir(cwd)
 this = sys.argv[0]
 usage = f"""
 Usage: {this} [start|stop|restart|status]

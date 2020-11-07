@@ -57,14 +57,14 @@ def _win_notify(title, msg=' '):
             '--icon', str(icon)
         ]
     logger.info("Command: "+" ".join(cmd))
-    return subprocess.call(cmd)
+    return subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
 
 class Popup(tk.Toplevel):
     def __init__(self):
         self.root = tk.Tk()
         super().__init__(self.root)
-        self.root.quit()
+        self.root.withdraw()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250
@@ -73,6 +73,7 @@ class Popup(tk.Toplevel):
         self.q = Queue(maxsize=1)
 
     def show(self, msg):
+        self.root.deiconify()
         self.lift()
         self.attributes('-topmost', True)
         canvas = tk.Canvas(self, width=self.WIDTH, height=self.HEIGTH)
@@ -95,6 +96,7 @@ class Popup(tk.Toplevel):
 
     def close(self, event=""):
         self.attributes('-topmost', False)
+        self.root.deiconify()
         if event:
             self.q.put(False)
         self.destroy()
