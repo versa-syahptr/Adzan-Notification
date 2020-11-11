@@ -14,7 +14,7 @@ if "DISPLAY" not in os.environ:
     os.environ["DISPLAY"] = ':0'
     cli = True
 cwd = os.path.abspath(os.path.dirname(__file__))
-os.chdir(cwd)
+
 this = sys.argv[0]
 usage = f"""
 Usage: {this} [start|stop|restart|status]
@@ -101,7 +101,7 @@ class Daemon:
             print("process stoped")
             return
         else:
-            print(f"No Adzan-Notification process exists")
+            print("No Adzan-Notification process exists")
             sys.exit(-1)
 
     def restart(self):
@@ -109,7 +109,7 @@ class Daemon:
         sleep(1)
         self.start()
 
-    def status(self):
+    def stats(self):
         pid = self._get_pid()
         if pid_exists(pid):
             try:
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     os.chdir(cwd)
     if len(sys.argv) > 1:
         arg = sys.argv[1]
-        if arg in ("start", "stop", "restart", "status"):
+        if arg in ("start", "stop", "restart", "stats"):
             getattr(proc, arg)()
         else:
             print(f"Unknown param {arg}{usage}")

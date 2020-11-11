@@ -119,10 +119,11 @@ def today_data() -> dict or None:
 def print_data():
     """ future development """
     data = today_data()
+    print(f"Waktu solat hari ini di {settings.city}")
     for key, value in data.items():
-        print(f"{key}:({value})")
+        print(f"{key}\t: {value}".expandtabs(10))
 
 
 if __name__ == '__main__':
-    print(check_city(city="bkoasi", country="id"))
+    print_data()
     # print(today_data())

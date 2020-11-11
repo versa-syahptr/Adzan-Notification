@@ -2,9 +2,10 @@ import logging
 import os
 import platform
 import subprocess
+import time
 import tkinter as tk
-from queue import Queue
 
+import simpleaudio as sa
 from PIL import Image, ImageTk
 
 logger = logging.getLogger(__name__)
@@ -60,27 +61,35 @@ def _win_notify(title, msg=' '):
     return subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
 
+if platform.system() == "Windows":
+    notify = _win_notify
+elif platform.system() == "Linux":
+    notify = _nux_notify
+else:
+    raise NotImplementedError
+
+
 class Popup(tk.Toplevel):
     def __init__(self):
-        self.root = tk.Tk()
-        super().__init__(self.root)
-        self.root.withdraw()
+        tk.Toplevel.__init__(self)
+        self.master.withdraw()
         self.IMAGE_PATH = os.path.join("src", "bg")
         self.X_PATH = os.path.join("src", "x")
         self.WIDTH, self.HEIGTH = 450, 250
         self.overrideredirect(1)
         self.geometry('{}x{}'.format(self.WIDTH, self.HEIGTH))
-        self.q = Queue(maxsize=1)
+        self.audio = ""
+        self.running = False
 
-    def show(self, msg):
-        self.root.deiconify()
+    def show(self, msg: str, audio: str, *, test=False):
+        self.audio = audio
         self.lift()
         self.attributes('-topmost', True)
         canvas = tk.Canvas(self, width=self.WIDTH, height=self.HEIGTH)
         canvas.pack()
 
         bg_img = ImageTk.PhotoImage(Image.open(self.IMAGE_PATH).resize((self.WIDTH, self.HEIGTH), Image.ANTIALIAS))
-        canvas.background = bg_img  # Keep a reference in case this code is put in a function.
+        canvas.background = self.bg = bg_img  # Keep a reference in case this code is put in a function.
         canvas.create_image(0, 0, anchor=tk.NW, image=bg_img)  # assign this to variable to get the id
         x_img = ImageTk.PhotoImage(Image.open(self.X_PATH).resize((50, 50), Image.ANTIALIAS))
 
@@ -91,24 +100,26 @@ class Popup(tk.Toplevel):
         # binding mouse click
         canvas.tag_bind(button_window, '<Button-1>', self.close)
         _center(self)
-        self.mainloop()
-        self.root.withdraw()
+        self.running = True
+        wvObj = sa.WaveObject.from_wave_file(self.audio)
+        adzan = wvObj.play()
+        while self.running:
+            self.update()
+            self.update_idletasks()
+            if test:
+                time.sleep(20)
+                self.close()
+                break
+            if not adzan.is_playing():
+                self.close()
+                break
+        adzan.stop()
 
     def close(self, event=""):
         self.attributes('-topmost', False)
-        self.root.deiconify()
-        if event:
-            self.q.put(False)
-        self.destroy()
-        self.quit()
+        self.withdraw()
+        self.running = False
 
-
-if platform.system() == "Windows":
-    notify = _win_notify
-elif platform.system() == "Linux":
-    notify = _nux_notify
-else:
-    raise NotImplementedError
 
 if __name__ == '__main__':
     window = Popup()

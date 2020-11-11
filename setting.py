@@ -106,8 +106,6 @@ class Settings:
     # SUBCLASS
     class __Audio:
         def __init__(self):
-            if "audio" not in parser:
-                parser.add_section("audio")
             self.subuh = parser["audio"]["subuh"]
             self.other = parser["audio"]["other"]
 

@@ -9,10 +9,6 @@ import subprocess
 import sys
 import time
 from datetime import datetime, date
-from queue import Queue, Empty
-from threading import Thread
-
-import simpleaudio as sa
 
 import net
 from gui import notify, Popup
@@ -22,7 +18,6 @@ if platform.system() == "Windows":
     import psutil
 
 # Log stuff
-# TODO: create custom logging formater
 logger = logging.getLogger(__name__)
 chndl = logging.StreamHandler(sys.stdout)
 fhndl = logging.FileHandler("adzan.log")
@@ -41,8 +36,6 @@ today = date.today()
 s = sched.scheduler(time.time, time.sleep)
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
-q = Queue(maxsize=1)
-popup = Popup()
 media_pids = []
 
 
@@ -85,8 +78,8 @@ def resume_media(pids: iter):
 
 
 def do_adzan(solat: str, test=False):
+    pids = pause_media(settings.media_player)
     try:
-        pids = pause_media(settings.media_player)
         kota = settings.city
         audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
         audio_file = os.path.join(src_dir, audio)
@@ -95,37 +88,13 @@ def do_adzan(solat: str, test=False):
         msg = f"Waktu sholat {solat} pukul {now} untuk Kota {kota} dan sekitarnya"
         notify(title=f"Waktu sholat {solat} di {kota}", msg=msg)
         logger.info(msg)
-        wvObj = sa.WaveObject.from_wave_file(audio_file)
-        adzan = wvObj.play()
-        q.put(msg)  # show the popup
-        if test:
-            time.sleep(20)
-            adzan.stop()
-        else:
-            while adzan.is_playing():
-                try:
-                    data = popup.q.get(timeout=0.5)
-                except Empty:
-                    continue
-                else:
-                    logger.info(data)
-                    adzan.stop()
-
-        popup.close()
-        resume_media(pids)
+        popup = Popup()
+        popup.show(msg, audio_file, test=test)
     except Exception as ex:
         logger.exception(f"Exception occured in adzan calls!, {ex}")
         raise
-
-
-def show_popup(test=False):
-    while True:
-        if s.empty() and not test:
-            break
-        msg = q.get()
-        popup.show(msg)
-        if test:
-            break
+    finally:
+        resume_media(pids)
 
 
 def schedule(jadwal: dict):
@@ -145,30 +114,33 @@ def schedule(jadwal: dict):
     logger.info(f"scheduled for adzan: {event}")
 
 
-def test():
-    Thread(target=do_adzan, args=("", True), daemon=True).start()
-    show_popup(True)
+def test_func():
+    time.sleep(2)
+    do_adzan("Subuh", test=True)  # test mode
+    time.sleep(10)
+    do_adzan("Maghrib")  # NON-Test mode
+    time.sleep(2)
+    print("yeeah")
 
 
 def main():
-    t = Thread(target=s.run, daemon=True)
     notify("Notifikasi Adzan started")
     data = net.today_data()
     schedule(data)
-    t.start()
-    show_popup()  # func to wait the queue
+    s.run()
 
 
 if __name__ == "__main__":
     try:
         if len(sys.argv) > 1:
             if sys.argv[1] == "-t":
-                test()
-                sys.exit(0)
-
-        ps_start()
-        main()
-        ps_stop()
+                test_func()
+            elif sys.argv[1] == "-d":
+                net.print_data()
+        else:
+            ps_start()
+            main()
+            ps_stop()
     except KeyboardInterrupt as e:
         logger.error(f"User interupt or sys exit: {e}")
         raise
