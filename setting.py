@@ -63,7 +63,7 @@ class Settings:
         elif platform.system() == 'Windows':
             p = os.path.abspath(self.filename)
             print(p)
-            subprocess.Popen(["start", p], shell=True)
+            subprocess.Popen(f"start {p}", shell=True)
 
     def load(self):
         parser.read(self.filename)

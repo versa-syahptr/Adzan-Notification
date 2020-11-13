@@ -117,7 +117,6 @@ def today_data() -> dict or None:
 
 
 def print_data():
-    """ future development """
     data = today_data()
     print(f"Waktu solat hari ini di {settings.city}")
     for key, value in data.items():

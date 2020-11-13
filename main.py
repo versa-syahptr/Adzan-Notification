@@ -37,13 +37,14 @@ s = sched.scheduler(time.time, time.sleep)
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
 media_pids = []
+WINDOWS = platform.system() == "Windows"
 
 
 # FUNCTIONS
 def ps_start():
-    if platform.system() == "Windows":
+    if WINDOWS:
         pname = psutil.Process(os.getpid()).name()
-        p = subprocess.Popen(["psHandler.exe", pname], start_new_session=True)
+        p = subprocess.Popen(["psHandler.exe", pname], start_new_session=True, stdout=subprocess.DEVNULL)
         pid = str(p.pid)
         logger.info(f"ps started with pid: {pid}")
         with open("ps.pid", 'w') as f:
@@ -51,28 +52,32 @@ def ps_start():
 
 
 def ps_stop():
-    if platform.system() == "Windows":
+    if WINDOWS:
         with open("ps.pid") as f:
             pid = int(f.read())
             os.kill(pid, 9)
         os.remove("ps.pid")
 
 
-def pause_media(app: str) -> iter or None:
-    if not app:
+def pause_media(app: str) -> list or None:
+    if not app or WINDOWS:
         return
     try:
-        pids = map(int, subprocess.check_output(['pidof', app]).split())
+        pids = list(map(int, subprocess.check_output(['pidof', app]).split()))
     except subprocess.CalledProcessError:
         return None
     for pid in pids:
         os.kill(pid, signal.SIGSTOP)
+        print(pid)
+    logger.info(f"{settings.media_player} with pid: {pids} stopped")
     return pids
 
 
-def resume_media(pids: iter):
+def resume_media(pids: list):
     if not pids:
         return
+    logger.info(f"pids: {pids} resumed")
+    time.sleep(1)  # add a bit delay
     for pid in pids:
         os.kill(pid, signal.SIGCONT)
 
@@ -115,17 +120,22 @@ def schedule(jadwal: dict):
 
 
 def test_func():
+    logger.setLevel(logging.ERROR)  # disable INFO logging from here
+    net.print_data()
     time.sleep(2)
+    print("TEST MODE, adzan plays for 20 seconds")
     do_adzan("Subuh", test=True)  # test mode
+    print("wait")
     time.sleep(10)
+    print("NON-TEST MODE, you can quit by clicking X button or ^C")
     do_adzan("Maghrib")  # NON-Test mode
     time.sleep(2)
     print("yeeah")
 
 
 def main():
-    notify("Notifikasi Adzan started")
     data = net.today_data()
+    notify("Notifikasi Adzan started")
     schedule(data)
     s.run()
 
@@ -133,10 +143,13 @@ def main():
 if __name__ == "__main__":
     try:
         if len(sys.argv) > 1:
-            if sys.argv[1] == "-t":
+            arg = sys.argv[1]
+            if arg == "-t":
                 test_func()
-            elif sys.argv[1] == "-d":
+            elif arg == "-d":
                 net.print_data()
+            else:
+                print(f"Unknown param {arg}")
         else:
             ps_start()
             main()
