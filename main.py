@@ -109,7 +109,6 @@ def schedule(jadwal: dict):
         notify("Notifikasi Adzan Error", "No internet or something else")
         sys.exit(-1)
     for nama, waktu in jadwal.items():
-        print(nama, waktu)
         waktu = waktu.split()[0]
         if nama.lower() in sholat_list:
             timestamp = time.mktime(time.strptime(f"{today} {waktu}", "%Y-%m-%d %H:%M"))
@@ -136,6 +135,7 @@ def test_func():
 def main():
     data = net.today_data()
     notify("Notifikasi Adzan started")
+    net.print_data()
     schedule(data)
     s.run()
 
