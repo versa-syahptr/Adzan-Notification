@@ -17,6 +17,8 @@ cf = logging.Formatter("%(name)s - %(levelname)s => %(msg)s")
 ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
 chndl.setFormatter(cf)
 fhndl.setFormatter(ff)
+logger.addHandler(chndl)
+logger.addHandler(fhndl)
 logger.setLevel(logging.INFO)
 
 
@@ -118,9 +120,12 @@ def today_data() -> dict or None:
 
 def print_data():
     data = today_data()
-    print(f"Waktu solat hari ini di {settings.city}")
-    for key, value in data.items():
-        print(f"{key}\t: {value}".expandtabs(10))
+    try:
+        print(f"Waktu solat hari ini di {settings.city}")
+        for key, value in data.items():
+            print(f"{key}\t: {value}".expandtabs(10))
+    except OSError as e:
+        logger.error(f"couldn't print to stdout, error: {e}")
 
 
 if __name__ == '__main__':
