@@ -25,7 +25,7 @@ class Settings:
             le = os.path.getmtime(self.filename)
             time.sleep(1)
             if le > old_le:
-                print("edited")
+                print("e", end=' ')
                 if self.available:
                     print("OK")
                     break

@@ -16,6 +16,7 @@ if "DISPLAY" not in os.environ:
 
 this = os.path.realpath(__file__)
 cwd = os.path.abspath(os.path.dirname(this))
+os.chdir(cwd)
 
 usage = """
 Usage: adzan <command>
@@ -67,6 +68,9 @@ class Daemon:
     def __init__(self):
         pass
 
+    def _edit(self):
+        subprocess.run(["nano", setting.filename])
+
     def _get_pid(self):
         if os.path.exists(".pid"):
             with open(".pid", 'r') as f:
@@ -87,7 +91,7 @@ class Daemon:
 
         if cli and not setting.available:
             print("first run, please edit configuration file")
-            subprocess.run(["nano", "settings.ini"])
+            self._edit()
 
         if os.path.exists("./adzan-service.exe"):
             app = "./adzan-service.exe"
@@ -131,22 +135,32 @@ class Daemon:
     def symlink(self):
         target = "/usr/local/bin/adzan"
         if os.path.exists(target):
-            sys.exit("symlink already there")
+            sys.exit("symlink is already there")
         try:
-            os.link(this, target)
+            os.symlink(this, target)
             print("ok")
-        except IOError as e:
-            if e.errno == errno.EPERM:
-                sys.exit("You need sudo priviledge to run this")
-            raise
+        except PermissionError as e:
+            sys.exit(f"[{e}] You need sudo priviledge to run this")
+
+    def config(self):
+        pid = self._get_pid()
+        if cli:
+            self._edit()
+        else:
+            setting.open_file()
+            setting.wait_for_edit()
+
+        if pid_exists(pid):
+            self.restart()
+        else:
+            self.start()
 
 
 if __name__ == '__main__':
     proc = Daemon()
-    os.chdir(cwd)
     if len(sys.argv) > 1:
         arg = str(sys.argv[1])
-        if arg in ("start", "stop", "restart", "stats"):
+        if arg in ("start", "stop", "restart", "stats", "symlink", "config"):
             getattr(proc, arg)()
         elif arg.startswith("-"):
             if arg.startswith("--"):

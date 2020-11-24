@@ -12,26 +12,16 @@ from datetime import datetime, date
 
 import net
 from gui import notify, Popup
+from util import AdzanLogger
 from net import settings
 
 if platform.system() == "Windows":
     import psutil
 
-# Log stuff
-logger = logging.getLogger(__name__)
-chndl = logging.StreamHandler(sys.stdout)
-fhndl = logging.FileHandler("adzan.log")
-cf = logging.Formatter("%(name)s | %(levelname)s => %(msg)s")
-ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
-chndl.setFormatter(cf)
-fhndl.setFormatter(ff)
-logger.addHandler(chndl)
-logger.addHandler(fhndl)
-logger.setLevel(logging.INFO)
-
 
 # constants
 APP_NAME = "Adzan Notification"
+logger = AdzanLogger(__name__)
 today = date.today()
 s = sched.scheduler(time.time, time.sleep)
 root_dir = os.path.dirname(__file__)
@@ -135,7 +125,7 @@ def test_func():
 def main():
     data = net.today_data()
     notify("Notifikasi Adzan started")
-    net.print_data()
+    net.print_data(data)
     schedule(data)
     s.run()
 

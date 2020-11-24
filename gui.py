@@ -1,4 +1,3 @@
-import logging
 import os
 import platform
 import subprocess
@@ -7,13 +6,10 @@ import tkinter as tk
 
 import simpleaudio as sa
 from PIL import Image, ImageTk
+from util import AdzanLogger
 
-logger = logging.getLogger(__name__)
-fhndl = logging.FileHandler("adzan.log")
-ff = logging.Formatter("%(asctime)s  | %(name)s{PID:%(process)d} - %(levelname)s => %(msg)s")
-fhndl.setFormatter(ff)
-logger.addHandler(fhndl)
-logger.setLevel(logging.INFO)
+logger = AdzanLogger(__name__)
+
 
 
 def _center(win):
