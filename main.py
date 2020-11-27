@@ -58,7 +58,6 @@ def pause_media(app: str) -> list or None:
         return None
     for pid in pids:
         os.kill(pid, signal.SIGSTOP)
-        print(pid)
     logger.info(f"{settings.media_player} with pid: {pids} stopped")
     return pids
 

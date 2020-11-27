@@ -27,6 +27,7 @@ Commands:
     stop        Stop current Adzan-Notification process; throws error if the process don't exist
     restart     Restart Adzan-Notification process
     stats       View process statisticss (aka "ps -F")
+    config      Edit configuration file
 
 Options:
     -t, --test  Test the adzan
