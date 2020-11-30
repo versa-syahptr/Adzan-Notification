@@ -1,6 +1,8 @@
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
+from time import time, sleep
+
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
 # The background is set with 40 plus the number of the color, and the foreground with 30
@@ -60,18 +62,43 @@ class AdzanLogger(logging.Logger):
         self.addHandler(file)
 
 
+def uninterruptible_sleep(seconds: float):
+    """
+    function uninterruptible_sleep(sec) by Versa Syahputra
+
+    Delay execution for a given number of seconds. When the process suspended by system,
+    this function will count how long the process has suspended and count it as "delayed time".
+    If the suspend time exceeds the delay time it will raise RuntimeError
+
+    :param seconds: the delay time, +- 1 second accuracy
+    :type seconds: float
+    :return: None
+    """
+    # convert to int to increase accuracy
+    seconds = int(seconds)
+    while seconds > 0:
+        before = round(time())
+        sleep(1)
+        seconds -= 1
+        # print(seconds)
+        after = round(time())
+        if after != before+1:
+            seconds = seconds - ((after - before) - 1)
+            if seconds < 0:
+                raise RuntimeError("Process suspended too long")
+
+
 if __name__ == '__main__':
     """
     IGNORE THIS, testing purpose
     """
-    def g():
-        log.setLevel(logging.ERROR)
-    def f():
-        # log.setLevel(logging.DEBUG)
-        log.debug("f")
-    log = AdzanLogger(__name__)
-    log.setLevel(logging.ERROR)
-    print(log.level)
-    g()
-    log.info("a")
-    f()
+    def test_uis(sec):
+        a = int(time())
+        print(a)
+        uninterruptible_sleep(sec)
+        b = int(time())
+        print(b)
+        print(b-a)
+        print(b-1 <= a+sec <= b+1)
+
+    test_uis(120)

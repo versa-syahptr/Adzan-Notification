@@ -12,7 +12,7 @@ from datetime import datetime, date
 
 import net
 from gui import notify, Popup
-from util import AdzanLogger
+from util import AdzanLogger, uninterruptible_sleep
 from net import settings
 
 if platform.system() == "Windows":
@@ -23,7 +23,7 @@ if platform.system() == "Windows":
 APP_NAME = "Adzan Notification"
 logger = AdzanLogger(__name__)
 today = date.today()
-s = sched.scheduler(time.time, time.sleep)
+s = sched.scheduler(time.time, uninterruptible_sleep)  # using uninterruptible_sleep() from util
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
 media_pids = []
@@ -121,12 +121,20 @@ def test_func():
     print("yeeah")
 
 
-def main():
+def main(re=""):
     data = net.today_data()
-    notify("Notifikasi Adzan started")
+    greet = f"Notifikasi Adzan {re}started"
+    notify(greet)
+    if re:
+        logger.info(greet)
     net.print_data(data)
     schedule(data)
-    s.run()
+    try:
+        s.run()
+    except RuntimeError:
+        for event in s.queue:
+            s.cancel(event)
+        return main("re")
 
 
 if __name__ == "__main__":
