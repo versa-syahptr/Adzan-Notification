@@ -6,10 +6,7 @@ import tkinter as tk
 
 import simpleaudio as sa
 from PIL import Image, ImageTk
-from util import AdzanLogger
-
-logger = AdzanLogger(__name__)
-
+from util import logger
 
 
 def _center(win):

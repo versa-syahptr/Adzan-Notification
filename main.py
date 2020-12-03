@@ -9,44 +9,17 @@ import subprocess
 import sys
 import time
 from datetime import datetime, date
-
+from util import logger, uninterruptible_sleep, settings
 import net
 from gui import notify, Popup
-from util import AdzanLogger, uninterruptible_sleep
-from net import settings
-
-if platform.system() == "Windows":
-    import psutil
 
 
 # constants
-APP_NAME = "Adzan Notification"
-logger = AdzanLogger(__name__)
 today = date.today()
 s = sched.scheduler(time.time, uninterruptible_sleep)  # using uninterruptible_sleep() from util
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
-media_pids = []
 WINDOWS = platform.system() == "Windows"
-
-
-# FUNCTIONS
-def ps_start():
-    if WINDOWS:
-        pname = psutil.Process(os.getpid()).name()
-        p = subprocess.Popen(["psHandler.exe", pname], start_new_session=True, stdout=subprocess.DEVNULL)
-        pid = str(p.pid)
-        logger.info(f"ps started with pid: {pid}")
-        with open("ps.pid", 'w') as f:
-            f.write(pid)
-
-
-def ps_stop():
-    if WINDOWS:
-        with open("ps.pid") as f:
-            pid = int(f.read())
-            os.kill(pid, 9)
-        os.remove("ps.pid")
 
 
 def pause_media(app: str) -> list or None:
@@ -74,7 +47,7 @@ def resume_media(pids: list):
 def do_adzan(solat: str, test=False):
     pids = pause_media(settings.media_player)
     try:
-        kota = settings.city
+        kota = settings.city.capitalize()
         audio = settings.audio.subuh if 'fajr' in solat.lower() else settings.audio.other
         audio_file = os.path.join(src_dir, audio)
         logger.info(f"Audio file: {audio_file}")
@@ -148,11 +121,10 @@ if __name__ == "__main__":
             else:
                 print(f"Unknown param {arg}")
         else:
-            ps_start()
             main()
-            ps_stop()
-    except KeyboardInterrupt as e:
-        logger.error(f"User interupt or sys exit: {e}")
+    except KeyboardInterrupt:
+        logger.error(f"User interupt or sys exit")
         raise
     except Exception as e:
         logger.exception(str(e)+'\n')
+        notify("Adzan Notification error!", str(e))

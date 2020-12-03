@@ -5,7 +5,7 @@ import subprocess
 import sys
 from time import sleep
 
-from setting import Settings
+from util import settings
 
 # launcher.py is UNIX ONLY #
 
@@ -33,7 +33,6 @@ Options:
     -t, --test  Test the adzan
     -d, --data  Print today's sholat time schedule
 """
-setting = Settings("settings.ini")
 
 
 def pid_exists(pid: int):
@@ -70,7 +69,7 @@ class Daemon:
         pass
 
     def _edit(self):
-        subprocess.run(["nano", setting.filename])
+        subprocess.run(["nano", settings.filename])
 
     def _get_pid(self):
         if os.path.exists(".pid"):
@@ -90,7 +89,7 @@ class Daemon:
         if pid_exists(pid):
             sys.exit(f"Process already started with pid: {pid}")
 
-        if cli and not setting.available:
+        if cli and not settings.available:
             print("first run, please edit configuration file")
             self._edit()
 
@@ -148,8 +147,8 @@ class Daemon:
         if cli:
             self._edit()
         else:
-            setting.open_file()
-            setting.wait_for_edit()
+            settings.open_file()
+            settings.wait_for_edit()
 
         if pid_exists(pid):
             self.restart()
