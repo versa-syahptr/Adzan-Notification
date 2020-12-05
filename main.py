@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, date
-from util import logger, uninterruptible_sleep, settings
+from util import logger, uninterruptible_sleep, Settings
 import net
 from gui import notify, Popup
 
@@ -20,6 +20,7 @@ s = sched.scheduler(time.time, uninterruptible_sleep)  # using uninterruptible_s
 root_dir = os.path.dirname(__file__)
 src_dir = os.path.join(root_dir, "src")
 WINDOWS = platform.system() == "Windows"
+settings = Settings("settings.ini")
 
 
 def pause_media(app: str) -> list or None:

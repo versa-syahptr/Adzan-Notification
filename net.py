@@ -5,13 +5,14 @@ from datetime import date
 
 import requests
 from requests import HTTPError
-from util import logger, settings
+from util import logger, Settings
 
 
 # logger = AdzanLogger(__name__)
 API_ENDPOINT = "http://api.aladhan.com/v1/calendarByCity"
 today = date.today()
 root_dir = os.path.dirname(__file__)
+settings = Settings("settings.ini")
 
 
 class NoConnectionError(BaseException): pass

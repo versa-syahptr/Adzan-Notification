@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 from time import sleep
+from util import Settings
 
-from util import settings
 
 # launcher.py is UNIX ONLY #
 
@@ -17,6 +17,7 @@ if "DISPLAY" not in os.environ:
 this = os.path.realpath(__file__)
 cwd = os.path.abspath(os.path.dirname(this))
 os.chdir(cwd)
+settings = Settings("settings.ini")
 
 usage = """
 Usage: adzan <command>

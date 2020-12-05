@@ -198,10 +198,6 @@ def uninterruptible_sleep(seconds: float):
 
 # INSTANCES
 logger = AdzanLogger("Adzan")
-try:
-    settings = Settings("settings.ini")
-except Exception as e:
-    logger.exception("exception in settings")
 
 
 if __name__ == '__main__':
