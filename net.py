@@ -105,19 +105,22 @@ def today_data() -> dict or None:
         return load_data(filename)
 
 
-def print_data(data=""):
+def print_data(data="", *, format_only=False) -> None or str:
     logger.setLevel(logging.ERROR)
     if not data:
         data = today_data()
     try:
-        print(f"Waktu solat hari ini di {settings.city}")
-        for key, value in data.items():
-            print(f"{key}\t: {value}".expandtabs(10))
+        fmt = f"Waktu solat hari ini di {settings.city}\n" + \
+              "\n".join(f"{key}\t: {value}".expandtabs(10) for key, value in data.items())
     except OSError as e:
         logger.error(f"couldn't print to stdout, error: {e}")
+    else:
+        if format_only:
+            return fmt
+        else:
+            print(fmt)
 
 
 if __name__ == '__main__':
-    today_data()
-    print_data()
+    print_data(format_only=True)
     # print(today_data())

@@ -40,6 +40,7 @@ def _nux_notify(title, msg='', *, icon='masjid'):
     return n
 
 
+# TODO: implement this without toast64.exe
 def _win_notify(title, msg=' '):
     # using 'toast64' from https://github.com/go-toast/toast
     icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'icon.png')
@@ -48,7 +49,9 @@ def _win_notify(title, msg=' '):
             '--app-id', "Jadwal Sholat",
             '--title', title,
             '--message', msg,
-            '--icon', str(icon)
+            '--icon', str(icon),
+            '--action', 'Lihat waktu sholat',
+            '--action-arg', 'adzan:data'
         ]
     logger.info("Command: "+" ".join(cmd))
     return subprocess.call(cmd, stdout=subprocess.DEVNULL)
@@ -77,7 +80,7 @@ class Popup(tk.Toplevel):
     def show(self, msg: str, audio: str, *, test=False):
         self.audio = audio
         self.lift()
-        self.attributes('-topmost', True)
+        # self.attributes('-topmost', True)
         canvas = tk.Canvas(self, width=self.WIDTH, height=self.HEIGTH)
         canvas.pack()
 
@@ -113,7 +116,3 @@ class Popup(tk.Toplevel):
         self.withdraw()
         self.running = False
 
-
-if __name__ == '__main__':
-    window = Popup()
-    window.show("Waktu sholat dhuhur pukul 11:41 untuk Kota bekasi dan sekitarnya")

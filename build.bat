@@ -9,6 +9,5 @@ venv\Scripts\pyinstaller.exe ^
 --add-data "src\*;src" ^
 --add-data "toast64.exe;." ^
 --add-data "settings.ini;." ^
---noconfirm ^
-main.py
+winlauncher.py
 

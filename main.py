@@ -96,19 +96,22 @@ def test_func():
 
 
 def main(re=""):
-    data = net.today_data()
-    greet = f"Notifikasi Adzan {re}started"
-    notify(greet)
-    if re:
-        logger.info(greet)
-    net.print_data(data)
-    schedule(data)
     try:
-        s.run()
-    except RuntimeError:
-        for event in s.queue:
-            s.cancel(event)
-        return main("re")
+        data = net.today_data()
+        greet = f"Notifikasi Adzan {re}started"
+        notify(greet)
+        if re:
+            logger.info(greet)
+        net.print_data(data)
+        schedule(data)
+        try:
+            s.run()
+        except RuntimeError:
+            for event in s.queue:
+                s.cancel(event)
+            return main("re")
+    finally:
+        os.remove(".pid")
 
 
 if __name__ == "__main__":
